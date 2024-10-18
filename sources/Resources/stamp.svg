@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   width="20px"
+   height="20px"
+   version="1.1"
+   xml:space="preserve"
+   style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:2;"
+   id="svg8"
+   sodipodi:docname="stamp.svg"
+   inkscape:version="1.2.1 (9c6d41e410, 2022-07-14)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg"><defs
+   id="defs12" /><sodipodi:namedview
+   id="namedview10"
+   pagecolor="#ffffff"
+   bordercolor="#000000"
+   borderopacity="0.25"
+   inkscape:showpageshadow="2"
+   inkscape:pageopacity="0.0"
+   inkscape:pagecheckerboard="0"
+   inkscape:deskcolor="#d1d1d1"
+   showgrid="true"
+   inkscape:zoom="18.154967"
+   inkscape:cx="29.936712"
+   inkscape:cy="20.765667"
+   inkscape:window-width="2560"
+   inkscape:window-height="1377"
+   inkscape:window-x="-8"
+   inkscape:window-y="-8"
+   inkscape:window-maximized="1"
+   inkscape:current-layer="g8"><inkscape:grid
+     type="xygrid"
+     id="grid2379" /></sodipodi:namedview>
+    <rect
+   x="0"
+   y="0"
+   width="20"
+   height="20"
+   style="fill-opacity:0;"
+   id="rect2" />
+    
+<g
+   id="g8"
+   transform="matrix(0.03097599,0,0,0.03097599,2.0701627,2)"
+   style="stroke-width:32.2832">
+	<path
+   class="st0"
+   d="m 441.123,301.182 c 0,0 -18.339,0 -33.781,0 -29.613,0 -72.404,0 -72.404,0 -28.19,-3.163 -36.485,-51.044 -22.89,-116.593 8.207,-39.524 24.55,-71.256 24.55,-103.995 C 336.599,36.088 300.511,0 255.996,0 211.49,0 175.402,36.088 175.402,80.594 c 0,32.74 16.352,64.472 24.55,103.995 13.595,65.549 5.3,113.43 -22.89,116.593 0,0 -42.793,0 -72.404,0 -15.442,0 -33.782,0 -33.782,0 -22.562,0 -40.858,18.295 -40.858,40.858 v 97.052 H 481.981 V 342.04 c 0,-22.563 -18.294,-40.858 -40.858,-40.858 z"
+   style="fill:#020202;stroke-width:32.2832;fill-opacity:1"
+   id="path4" />
+	<rect
+   x="64.241997"
+   y="471.884"
+   class="st0"
+   width="383.52499"
+   height="40.116001"
+   style="fill:#0b0b0b;stroke-width:32.2832;fill-opacity:1"
+   id="rect6" />
+</g></svg>

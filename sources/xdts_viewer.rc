@@ -1,0 +1,5 @@
+// Icon
+#if defined(APSTUDIO_INVOKED)
+ICON "XDTS_Viewer_icon.ico"
+#endif
+IDI_ICON1 ICON "XDTS_Viewer_icon.ico"

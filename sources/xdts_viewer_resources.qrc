@@ -1,0 +1,28 @@
+<RCC>
+  <qresource prefix="/">
+    <file>Resources/brush.svg</file>
+    <file>Resources/brush_large.svg</file>
+    <file>Resources/brush_small.svg</file>
+    <file>Resources/eraser.svg</file>
+    <file>Resources/gear.svg</file>
+    <file>Resources/load.svg</file>
+    <file>Resources/redo.svg</file>
+    <file>Resources/save.svg</file>
+    <file>Resources/export.svg</file>
+    <file>Resources/selection.svg</file>
+    <file>Resources/selection_rectangular.svg</file>
+    <file>Resources/selection_freehand.svg</file>
+    <file>Resources/undo.svg</file>
+    <file>Resources/stamp.svg</file>
+    <file>Resources/line_thin.svg</file>
+    <file>Resources/line_thick.svg</file>
+    <file>Resources/line_thin_arrow.svg</file>
+    <file>Resources/line_thick_arrow.svg</file>
+    <file>Resources/line_double.svg</file>
+    <file>Resources/line_dot.svg</file>
+    <file>Resources/zoomin.svg</file>
+    <file>Resources/zoomout.svg</file>
+    <file>Resources/menu.svg</file>
+    <file>Resources/logo.png</file>
+  </qresource>
+</RCC>

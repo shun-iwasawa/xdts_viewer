@@ -24,9 +24,9 @@ QString pageNumber2Name(int page, int parallelPageCount) {
   int fPage = (page - 1) / parallelPageCount;
   int pPage = (page - 1) % parallelPageCount;
 
-  char suffix = 'A' + pPage;
+  char alphabet = 'A' + pPage;
 
-  return QString::number(fPage) + QString(suffix);
+  return QString::number(fPage) + QString(alphabet);
 }
 
 }  // namespace
@@ -72,10 +72,10 @@ MyParams::MyParams()
     , m_exportTemplateFont("MS Gothic")
     , m_exportContentsFont("BIZ UDPGothic") {
   m_scribbleImages.clear();
-  m_suffixes = {{Genga, "_genga_ts"},
-                {Douga, "_douga_ts"},
-                {LO, "_LO_ts"},
-                {RoughGen, "_roughgen_ts"}};
+  m_suffixes.insert(Genga, "_genga_ts");
+  m_suffixes.insert(Douga, "_douga_ts");
+  m_suffixes.insert(LO, "_LO_ts");
+  m_suffixes.insert(RoughGen, "_roughgen_ts");
 }
 
 void MyParams::initialize() {
@@ -619,6 +619,10 @@ void MyParams::setCurrentXdtsPath(const QString& path) {
   MyParams* p = MyParams::instance();
   m_currentXdtsPaths.clear();
   QString fileName = QFileInfo(path).fileName();
+  std::cout << "fileName = " << fileName.toStdString()
+            << std::endl;
+  std::cout << "p->suffix(Genga) = " << p->suffix(Genga).toStdString()
+            << std::endl;
   if (fileName.contains(p->suffix(Genga))) {
     m_currentXdtsPaths.insert(Area_Actions, path);
     fileName = fileName.replace(p->suffix(Genga), p->suffix(Douga),

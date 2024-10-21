@@ -2270,6 +2270,7 @@ void XsheetPdfPreviewPane::paintEvent(QPaintEvent* event) {
   //  (double)m_pixmap.height() * m_scaleFactor);
   // std::cout << "scaleFactor = " << m_scaleFactor << std::endl;
   else {
+    painter.fillRect(rect(), Qt::white);
     painter.drawPixmap(0, 0, m_scaledPixmap);
 
     painter.setCompositionMode(QPainter::CompositionMode_Multiply);

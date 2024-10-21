@@ -200,7 +200,7 @@ public:
   const QString& approvalName() { return m_approvalName; }
   void setApprovalName(const QString& name) { m_approvalName = name; }
 
-  const QString& suffix(WorkFlowType type) { return m_suffixes.value(type); }
+  const QString& suffix(WorkFlowType type) { return m_suffixes[type]; }
   void setSuffix(WorkFlowType type, const QString& val) {
     m_suffixes.insert(type, val);
   }

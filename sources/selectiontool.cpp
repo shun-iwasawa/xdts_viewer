@@ -11,12 +11,12 @@
 #include <QKeyEvent>
 #include <QColorDialog>
 
-namespace {
-
 bool operator<(const QColor& a, const QColor& b) {
   return a.redF() < b.redF() || a.greenF() < b.greenF() ||
          a.blueF() < b.blueF() || a.alphaF() < b.alphaF();
 }
+
+namespace {
 
 QImage removeMatte(QImage& image, QColor matteColor) {
   double mc[3] = {matteColor.blueF(), matteColor.greenF(), matteColor.redF()};

@@ -57,7 +57,7 @@ $ sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
 $ cmake -G Xcode ../sources -B. -DQTDIR='/usr/local/opt/qt@5' -DWITH_TRANSLATION=OFF
 ```
 - オプション `-DWITH_TRANSLATION=OFF` はXcode12以降で必要です。
-- Xcodeでプロジェクト `/Users/yourlogin/Documents/xdts_viewer/build/xdts_viewer.xcodeproj` を開き、ビルドします。
+- Xcodeでプロジェクト `$xdts_viewer/build/xdts_viewer.xcodeproj` を開き、ビルドします。
 
 ### ライブラリの準備
 1. 下記を実行します。

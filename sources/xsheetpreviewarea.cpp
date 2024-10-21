@@ -2253,6 +2253,7 @@ void XsheetPdfPreviewPane::paintEvent(QPaintEvent* event) {
   computeScaledScribblePixmap();
 
   QPainter painter(this);
+#ifndef __MACOS__
   if (!m_clipRect.isEmpty()) {
     painter.setClipping(true);
     painter.setClipRect(m_clipRect);
@@ -2264,12 +2265,9 @@ void XsheetPdfPreviewPane::paintEvent(QPaintEvent* event) {
 
     releaseClipRect();
   }
-  // painter.setRenderHint(QPainter::SmoothPixmapTransform, true);
-  //.setRenderHint(QPainter::Antialiasing, true);
-  // QSize pmSize((double)m_pixmap.width() * m_scaleFactor,
-  //  (double)m_pixmap.height() * m_scaleFactor);
-  // std::cout << "scaleFactor = " << m_scaleFactor << std::endl;
-  else {
+  else
+#endif 
+  {
     painter.fillRect(rect(), Qt::white);
     painter.drawPixmap(0, 0, m_scaledPixmap);
 

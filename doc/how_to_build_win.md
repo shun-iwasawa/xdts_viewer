@@ -1,17 +1,17 @@
 
 # Building on Windows
 
-This software can be built using Visual Studio 2019 and Qt 5.15
+This software can be built using Visual Studio 2022 and Qt 5.15
 
 ## Required Software
 
-### Visual Studio Community 2019
-- https://visualstudio.microsoft.com/ja/vs/older-downloads/
+### Visual Studio Community 2022
+- https://visualstudio.microsoft.com/ja/vs/
 - During the installation, make sure to select all the Visual C++ packages.
 
 ### CMake
 - https://cmake.org/download/
-- This will be used to create the `MSVC 2019` project file.
+- This will be used to create the `MSVC 2022` project file.
 
 ### Qt
 - https://www.qt.io/download-open-source/
@@ -25,52 +25,42 @@ This software can be built using Visual Studio 2019 and Qt 5.15
 ## Acquiring the Source Code
 - Note: You can also perform these next commands with Github for Desktop client.
 - Clone the base repository.
-- Throughout the explanation `$iwawarper` will represent the root for the base repository.
+- Throughout the explanation `$xdts_viewer` will represent the root for the base repository.
 - Visual Studio cannot recognize UTF-8 without BOM source code properly. Furthermore, since the endline character is represented with only the LF character, one line comments in Japanese will often cause the following line to be treated as a comment by `MSVS` as well.
 - In order to prevent this, please change the following setting in git so that it will preserve the proper endline characters:
 - `git config core.safecrlf true`
 
-### lib and dll
-- `lib` and `dll` files are tracked by [Git Large File Storage](https://git-lfs.github.com/).
-- Note: git-lfs is also installed with Github Desktop.
-- Execute `git lfs pull` after `git clone` by using the lfs client.
-
 ### Using CMake to Create a Visual Studio Project
 - Launch CMake
-- In `Where is the source code`, navigate to `$iwawarper/sources`
-- In `Where to build the binaries`, navigate to `$iwawarper/build`
-- Or to wherever you usually build to.
-- If the build directory is in the git repository, be sure to add the directory to .gitignore
-- If the build directory is different from the one above, be sure to change to the specified directory where appropriate below.
--Click on Configure and select the version of Visual Studio you are using.
-- If Qt was installed to a directory other than the default, and the error Specify QTDIR properly appears, navigate to the `QTDIR` install folder and specify the path to `msvc2019_64`. Rerun Configure.
-- If red lines appear in the bottom box, you can safely ignore them.
+- In `Where is the source code`, navigate to `$xdts_viewer/sources`
+- In `Where to build the binaries`, navigate to `$xdts_viewer/build`
+  - Or to wherever you usually build to.
+  - If the build directory is in the git repository, be sure to add the directory to .gitignore
+  - If the build directory is different from the one above, be sure to change to the specified directory where appropriate below.
+- Click on Configure and select the version of Visual Studio you are using.
+  - If Qt was installed to a directory other than the default, and the error Specify QTDIR properly appears, navigate to the `QTDIR` install folder and specify the path to `msvc2019_64`. Rerun Configure.
+  - If red lines appear in the bottom box, you can safely ignore them.
 - Click Generate
 - Should the CMakeLists.txt file change, such as during automatic build cleanup, there is no need to rerun CMake.
 
 ## Building
-- Open `$iwawarper/build/IwaWarper.sln` and change to `Debug` or `Release` in the top bar.
+- Open `$xdts_viewer/build/xdts_viewer.sln` and change to `Debug` or `Release` in the top bar.
 - Compile the build.
-- The output will be in the corresponding folder in `$iwawarper/build/`
+- The output will be in the corresponding folder in `$xdts_viewer/build/`
 
 ## Running the Program
 ### Setting Up the Program's Path
-1. Copy the entire contents of `$iwawarper/build/Release` to an appropriate folder.
+1. Copy the entire contents of `$xdts_viewer/build/Release` to an appropriate folder.
 
-1. Copy all files under `$iwawarper/thirdparty/OpenToonz/bin` to the same folder as `IwaWarper.exe`
-
-1. Open a Command Prompt and navigate to `QTDIR/msvc2015_64/bin`. Run the Qt program `windeployqt.exe` with the path for `IwaWarper.exe`, `image.dll` and `toonzlib.dll` as an argument. (Another way to do this is navigate to the exe that was created in your Release folder and drag and drop the IwaWarper.exe + dlls and on top of the windeployqt.exe This will automatically generate the QT files and folders you will need.)
-    - The necessary Qt library files should be in the same folder as `IwaWarper.exe`
-
-1. Copy the following file(s) to the same folder as `IwaWarper.exe`
-      - `$opentoonz/thirdparty/glut/3.7.6/lib/glut64.dll`
+1. Open a Command Prompt and navigate to `QTDIR/msvc2015_64/bin`. Run the Qt program `windeployqt.exe` with the path for `xdts_viewer.exe` as an argument. (Another way to do this is navigate to the exe that was created in your Release folder and drag and drop the IwaWarper.exe on top of the windeployqt.exe This will automatically generate the QT files and folders you will need.)
+    - The necessary Qt library files should be in the same folder as `xdts_viewer.exe`
   
-### Prepare conf.ini (stuff folder location setting)
+### Copying the resource folder
 
-- Copy `$iwawarper/doc/conf.ini` to the same folder as `IwaWarper.exe`. The file specifies relative path to the stuff folder (the stuff folder is located at `$iwawarper/stuff` by deafault) . If `IwaWarper.exe` is not located in `$iwawarper/build/Release` or you would like to move the location of the stuff folder, change the value of `IWSTUFFROOT` in `conf.ini` to appropriate relative path.
+- Copy the entire folder `$xdts_viewer/xdts_viewer_resources` to the same folder as `xdts_viewer.exe`. This folder contains various settings, translation files, exposure sheet templates, etc. which are necessary for the software to work.
 
 ### Running
-`IwaWarper.exe` can now be run.  Congratulations!
+`xdts_viewer.exe` can now be run.  Congratulations!
 
 ## Creating Translation Files
 Qt translation files are generated first from the source code to .ts files, then from .ts files to a .qm file.  These files can be created in Visual Studio if the `translation_` project and `Build translation_??? only` (`translation_???`のみをビルド) is used.  These files are not created in the default `Build Project Solution`.

@@ -44,7 +44,7 @@ Visual Studio 2022 と Qt 5.15 でビルドできることを確認していま�
     - CMakeLists.txt に変更があった場合は、ビルド時に自動的に処理が走るので、以降は CMake を直接使用する必要はありません
 
 ## ビルド
-1. `$xdts_viewer/build/xdts_viewer.sln` を開いて Release 構成を選択してビルドします
+1. `$xdts_viewer/build/.sln` を開いて Release 構成を選択してビルドします
 2. `$xdts_viewer/build/Release` にファイルが生成されます
 
 ## 実行

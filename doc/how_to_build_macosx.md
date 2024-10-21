@@ -7,7 +7,7 @@
 - brew
 - Xcode
 - cmake (3.2.2 or later)
-- Qt 5.x (5.9.2 or later)
+- Qt 5.x (5.15 or later)
 
 ## Building on macOS
 
@@ -33,29 +33,26 @@ $ /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/
 
 In a Terminal window, execute the following statements:
 ```
-$ brew install cmake git-lfs qt@5
-$ git lfs install
+$ brew install cmake qt@5
 ```
 
 NOTE: This will install the latest version of QT v5.x which may not be compatible with older OS versions.
 
-If you cannot use the most recent version, download the online installer from https://www.qt.io/download and install the appropriate `macOS` version (min 5.9.2).  If installing via this method, be sure to install the `Qt Script (Deprecated)` libraries.
+If you cannot use the most recent version, download the online installer from https://www.qt.io/download and install the appropriate `macOS` version (min 5.9.2). 
 
-### Set up OpenToonz repository
+### Set up the repository
 
-These steps will put the OpenToonz repository under /Users/yourlogin/Documents.
+These steps will put the xdts_viewer repository under /Users/yourlogin/Documents.
 ```
 $ cd ~/Documents   #or where you want to store the repository#
-$ git clone https://github.com/opentoonz/iwawarper
-$ cd iwawarper
-$ git lfs pull
+$ git clone https://github.com/opentoonz/xdts_viewer
 ```
 
 ### Configure environment and Build OpenToonz
 
 1. Create the build directory with the following:
 ```
-$ cd ~/Documents/iwawarper
+$ cd ~/Documents/xdts_viewer
 $ mkdir build
 $ cd build
 ```
@@ -75,39 +72,37 @@ $ sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
 $ cmake -G Xcode ../sources -B. -DQTDIR='/usr/local/opt/qt@5' -DWITH_TRANSLATION=OFF   #replace QT path with your installed QT version#
 ```
 - Note that the option `-DWITH_TRANSLATION=OFF` is needed to avoid error when using XCode 12+ which does not allow to add the same source to multiple targets.
-- Open Xcode app and open project /Users/yourlogin/Documents/iwawarper/build/IwaWarper.xcodeproj
-- Change `ALL_BUILD` to `IwaWarper`
+- Open Xcode app and open project /Users/yourlogin/Documents/xdts_viewer/build/xdts_viewer.xcodeproj
+- Change `ALL_BUILD` to `xdts_viewer`
 - Start build with: Product -> Build
 
 Side note: If you want the option to build by command line and Xcode, create a separate build directory for each.
 
 ### Setting Up the libraries
-1. Copy all files under `$iwawarper/thirdparty/OpenToonz/dylib` to `IwaWarper.app/Contents/MacOS`
-2. Run the following:
+- Run the following:
+
 ```
-$ cd build #or build/Release or build/Debug, where IwaWarper.app has generated#
-$ /usr/local/opt/qt@5/bin/macdeployqt IwaWarper.app -verbose=1 -always-overwrite -executable=IwaWarper.app/Contents/MacOS/libimage.dylib -executable=IwaWarper.app/Contents/MacOS/libtoonzlib.dylib
+$ cd build #or build/Release or build/Debug, where xdts_viewer.app has generated#
+$ /usr/local/opt/qt@5/bin/macdeployqt xdts_viewer.app -verbose=1 -always-overwrite
 ```
-    - The necessary Qt library files should be in the same folder as IwaWarper binary.
+- The necessary Qt library files should be in the same folder as IwaWarper binary.
     
 
-### Prepare conf.ini (stuff folder location setting)
+### Copying the resource folder
 
-- Copy `$iwawarper/doc/conf.ini` to `IwaWarper.app/Contents/MacOS`. 
-- Copy the folder `$iwawarper/stuff` to `IwaWarper.app`.
-- The file `conf.ini` specifies path to the stuff folder. If you would like to move the location of the stuff folder, change the value of `IWSTUFFROOT` in `conf.ini` to appropriate path.
+- Copy the entire folder `$xdts_viewer/xdts_viewer_resources` to `xdts_viewer.app/Contents/MacOS`. 
 
 ### Running the build
 
 - If built using command line, run the following:
 ```
-$ open ~/Documents/iwawarper/build/IwaWarper.app
+$ open $xdts_viewer/build/xdts_viewer.app
 ```
 
 - If built using Xcode, do the following:
 
-    - Open Scheme editor for IwaWarper: Product -> Scheme -> Edit Scheme
+    - Open Scheme editor for xdts_viewer: Product -> Scheme -> Edit Scheme
     - Uncheck: Run -> Options -> Document Versions
     - Run in Debug mode: Product -> Run
 
-    - To open with command line or from Finder window, the application is found in `/Users/yourlogin/Documents/iwawarper/build/Debug/IwaWarper.app`
+    - To open with command line or from Finder window, the application is found in `/Users/yourlogin/Documents/xdts_viewer/build/Debug/xdts_viewer.app`

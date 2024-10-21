@@ -7,7 +7,7 @@
 	<key>CFBundleDisplayName</key>
 	<string>XDTSViewer</string>
 	<key>CFBundleExecutable</key>
-	<string>XDTSViewer</string>
+	<string>xdts_viewer</string>
 	<key>CFBundleIconFile</key>
 	<string>XDTS_Viewer.icns</string>
 	<key>CFBundleIdentifier</key>

@@ -25,6 +25,8 @@ int main(int argc, char* argv[]) {
   a.setAttribute(Qt::AA_CompressHighFrequencyEvents);
   a.setAttribute(Qt::AA_CompressTabletEvents);
 
+  MyParams::instance()->initialize();
+
   QTranslator tra;
   QString lang = MyParams::instance()->language();
   if (lang != "en") {
@@ -40,7 +42,6 @@ int main(int argc, char* argv[]) {
   QWindowsWindowFunctions::setWinTabEnabled(true);
 #endif
 
-  MyParams::instance()->initialize();
   if (argc > 1) {
     QString initialPath = QString::fromLocal8Bit(argv[1]);
     MyParams::instance()->setCurrentXdtsPath(initialPath);

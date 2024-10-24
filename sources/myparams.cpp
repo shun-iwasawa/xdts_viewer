@@ -298,9 +298,10 @@ QString MyParams::getImageFolderPath(QString xdtsPath) {
   QString fileName = fi.fileName();
 
   // _genga_ts, _douga_ts ‚ğŠÜ‚Şê‡‚Íæ‚èœ‚­
-  for (int type = (int)Genga; type < (int)WorkFlowTypeCount; type++)
-    fileName = fileName.remove(MyParams::instance()->suffix((WorkFlowType)type),
-                               Qt::CaseInsensitive);
+  fileName = fileName.remove(MyParams::instance()->suffix((WorkFlowType)Genga),
+                             Qt::CaseInsensitive);
+  fileName = fileName.remove(MyParams::instance()->suffix((WorkFlowType)Douga),
+                             Qt::CaseInsensitive);
 
   QString ret(fi.dir().path() + "/" + fileName);
   ret.chop(5);
@@ -619,8 +620,7 @@ void MyParams::setCurrentXdtsPath(const QString& path) {
   MyParams* p = MyParams::instance();
   m_currentXdtsPaths.clear();
   QString fileName = QFileInfo(path).fileName();
-  std::cout << "fileName = " << fileName.toStdString()
-            << std::endl;
+  std::cout << "fileName = " << fileName.toStdString() << std::endl;
   std::cout << "p->suffix(Genga) = " << p->suffix(Genga).toStdString()
             << std::endl;
   if (fileName.contains(p->suffix(Genga))) {

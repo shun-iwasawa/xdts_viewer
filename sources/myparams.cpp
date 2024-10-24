@@ -69,8 +69,14 @@ MyParams::MyParams()
     , m_endOverlapFrameLength(0)
     , m_currentColor(Qt::black)
     , m_exportLineColor(156, 200, 98)
+#ifdef MACOSX
+    , m_exportTemplateFont("Helvetica Neue")
+    , m_exportContentsFont("Helvetica Neue")
+#else
     , m_exportTemplateFont("MS Gothic")
-    , m_exportContentsFont("BIZ UDPGothic") {
+    , m_exportContentsFont("BIZ UDPGothic")
+#endif
+{
   m_scribbleImages.clear();
   m_suffixes.insert(Genga, "_genga_ts");
   m_suffixes.insert(Douga, "_douga_ts");
@@ -206,12 +212,19 @@ void MyParams::resetValues() {
   m_backsideImgPathWithDenpyo = "";
   m_skippedLevelNames         = "";
   m_exportLineColor           = QColor(156, 200, 98);
-  m_exportTemplateFont        = "MS Gothic";
-  m_exportContentsFont        = "BIZ UDPGothic";
-  m_mixUpColumns              = true;
-  m_isScannedGengaSheet       = false;
-  m_dougaColumnOffset         = 0;
-  m_scannedSheetPageAmount    = 1;
+#ifdef MACOSX
+  m_exportTemplateFont = "Helvetica Neue";
+  m_exportContentsFont = "Helvetica Neue";
+#else
+  m_exportTemplateFont = "MS Gothic";
+  m_exportContentsFont = "BIZ UDPGothic";
+#endif
+  m_mixUpColumns            = true;
+  m_isScannedGengaSheet     = false;
+  m_dougaColumnOffset       = 0;
+  m_scannedSheetPageAmount  = 1;
+  m_startOverlapFrameLength = 0;
+  m_endOverlapFrameLength   = 0;
 
   if (QFileInfo(PathUtils::getDefaultFormatSettingsPath()).exists()) {
     QSettings settings(PathUtils::getDefaultFormatSettingsPath(),

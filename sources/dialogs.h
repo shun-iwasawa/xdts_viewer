@@ -67,6 +67,7 @@ class PreferencesDialog : public QDialog {
   QColorDialog* m_lineColorDialog;
   // QFontComboBox* m_templateFontCB, * m_contentsFontCB;
   QComboBox* m_continuousLineCombo;
+  QLineEdit* m_minimumRepeatLengthField;
   QCheckBox *m_serialFrameNumberCB, *m_levelNameOnBottomCB,
       *m_capitalizeFirstLetterCB;
   QLineEdit* m_stampFolderPathField;

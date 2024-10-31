@@ -1322,9 +1322,6 @@ XSheetPDFTemplate::XSheetPDFTemplate(
   // テレコが有効な場合、テレコ列の有無の確認
   if (MyParams::instance()->isMixUpColumns()) checkTerekoColumns();
 
-  // リピート列の確認
-  checkRepeatColumns();
-
   m_colLabelRects.insert(Area_Actions, QList<QList<QRect>>());
   m_colLabelRects.insert(Area_Cells, QList<QList<QRect>>());
   m_colLabelRects_bottom.insert(Area_Actions, QList<QList<QRect>>());
@@ -1464,6 +1461,9 @@ void XSheetPDFTemplate::drawXsheetContents(QPainter& painter, int framePage,
   // draw dialogue
   // drawDialogue(painter, framePage);
 
+  // リピート列の確認
+  checkRepeatColumns();
+
   // 表示可能列が小さい方に合わせる
   int colsInPage = 1000;
   for (auto area : m_columns.keys())
@@ -1516,10 +1516,11 @@ void XSheetPDFTemplate::drawXsheetContents(QPainter& painter, int framePage,
     }
     // ↑このoccupiedColumnsの情報を使ってセルに書き込む！！
 
-    QList<RepeatInfo> repeatInfos;
+    QMap<int, QList<RepeatInfo>> repeatColumnInfos;
     // リピート表示は原画欄のみ
     if (dispArea == Area_Actions)
-      repeatInfos = m_repeatColumns.value(area, QList<RepeatInfo>());
+      repeatColumnInfos =
+          m_repeatColumns.value(area, QMap<int, QList<RepeatInfo>>());
 
     int c = 0, r;
     for (int colId = startColId; c < colsInPage; c++, colId++) {
@@ -1530,30 +1531,18 @@ void XSheetPDFTemplate::drawXsheetContents(QPainter& painter, int framePage,
 
       QString columnName = columns.at(colId).name;
 
-      int repeatStartFrame = -1;
-      for (auto ri : repeatInfos) {
-        if (ri.colId == colId) {
-          repeatStartFrame = ri.repeatStartFrame;
-          break;
-        }
-      }
-      if (repeatStartFrame >= 0 && cells.size() < 12) repeatStartFrame = -1;
-      // 「× 止メ」という表示を防ぎ、「×
-      // ～～」にするため、リピート表示をキャンセルする
-      else if (repeatStartFrame == 1 &&
-               cells.at(0).frame == XdtsFrameDataItem::SYMBOL_NULL_CELL)
-        repeatStartFrame = -1;
-      // bool isHoldFrame = columns.at(colId).isHoldFrame && m_duration >= 12 &&
-      // startFrame == 0;
+      QList<RepeatInfo> repeatInfos =
+          repeatColumnInfos.value(colId, QList<RepeatInfo>());
 
       FrameData prevCell;
-      // int continuousLineStartFrame = -1; //
-      // 継続線の開始フレームが入る。-1のとき、継続線は描かれない
+
       //  1ページ目であれば-1を返す。2ぺージ目以降の場合、前のフレームにさかのぼって継続線の開始フレームを探す
       int continuousLineStartFrame = checkPrevContinuous(cells, startFrame);
 
       r                  = 0;
       int topColumnIndex = c, prevColumnIndex = occupiedColumns[c][0];
+
+      // 描画フレーム f 毎に
       for (int f = startFrame; r < param(FrameLength); r++, f++) {
         if (m_duration == 0) break;
         if (f >= cells.size()) break;
@@ -1581,22 +1570,29 @@ void XSheetPDFTemplate::drawXsheetContents(QPainter& painter, int framePage,
         FrameData cell = cells.at(f);
 
         // repeat line
-        if (repeatStartFrame >= 2 && f > repeatStartFrame) {
-          // durationをはみ出したリピートの最後のコマが×の場合
-          if (f == cells.size() - 1 && f >= m_duration &&
-              cell.frame == XdtsFrameDataItem::SYMBOL_NULL_CELL)
-            drawCellNumber(painter, m_cellRects[dispArea][oc][r], cell,
-                           (prevColumnIndex != oc) ? columnName : "");
-          else if (dispArea == Area_Cells ||
-                   f - repeatStartFrame < maximumClLength)
-            drawRepeatLine(painter, m_cellRects[dispArea][oc][r]);
-          else {
-          }  // 原画欄でリピート線がmaximumClLengthより先には何も描かない
+        // 現在のフレームがリピート線/止メの範囲かどうか？
+        enum RepeatType { None, Repeat, Hold } currentRepeatType = None;
+        // bool isInRepeat = false;
+        int currentRepeatStartFrame = -1;
+        for (auto repeatInfo : repeatInfos) {
+          if (f >= repeatInfo.repeatEndFrame) continue;
+          // 繰り返しの1コマ目は動画番号を書く。線が描かれるのは次のコマから
+          int repeatStartFrame =
+              repeatInfo.repeatChunkStartFrame + repeatInfo.repeatChunkLength;
+          if (f < repeatStartFrame) continue;
+
+          currentRepeatType =
+              (repeatInfo.repeatChunkLength == 1) ? Hold : Repeat;
+          currentRepeatStartFrame = repeatStartFrame;
+          break;
         }
-        // 止メの線は黒実線、動画欄のみ描く
-        else if (repeatStartFrame == 1 && f >= repeatStartFrame) {
-          if (dispArea == Area_Cells)
-            drawContinuousLine(painter, m_cellRects[dispArea][oc][r], false);
+        // 繰り返しの1コマ目は動画番号を書く。線が描かれるのは次のコマから
+        if (currentRepeatType != None && f != currentRepeatStartFrame) {
+          // リピート線がmaximumClLengthより先には何も描かない
+          // 止メの線は描かない
+          if (currentRepeatType == Repeat &&
+              f - currentRepeatStartFrame < maximumClLength)
+            drawRepeatLine(painter, m_cellRects[dispArea][oc][r]);
         }
         // cotinuous line
         else if (cell.frame.isEmpty()) {
@@ -1630,7 +1626,7 @@ void XSheetPDFTemplate::drawXsheetContents(QPainter& painter, int framePage,
         // draw cell
         else {
           // リピートに入る1コマ目の文字を青くする
-          if (repeatStartFrame >= 2 && f == repeatStartFrame) {
+          if (currentRepeatStartFrame >= 2 && f == currentRepeatStartFrame) {
             painter.save();
             painter.setPen(Qt::blue);
           }
@@ -1638,7 +1634,8 @@ void XSheetPDFTemplate::drawXsheetContents(QPainter& painter, int framePage,
           drawCellNumber(painter, m_cellRects[dispArea][oc][r], cell,
                          (topColumnIndex != oc) ? columnName : "");
 
-          if (repeatStartFrame >= 2 && f == repeatStartFrame) painter.restore();
+          if (currentRepeatStartFrame >= 2 && f == currentRepeatStartFrame)
+            painter.restore();
 
           continuousLineStartFrame = checkContinuous(cells, f, r);
           prevCell                 = cell;
@@ -1667,31 +1664,36 @@ void XSheetPDFTemplate::drawXsheetContents(QPainter& painter, int framePage,
         }
 
         prevColumnIndex = oc;
-      }
+      }  // 次の 描画フレーム f へ
 
-      // 「
-      // 止メ」「リピート」表示。スタートフレームが現在のページに含まれている場合に表示
-      if (repeatStartFrame >= 0 && startFrame <= repeatStartFrame &&
-          repeatStartFrame < startFrame + param(FrameLength)) {
-        QString holdTxt = (repeatStartFrame > 1) ? QObject::tr("REPEAT")
-                                                 : QObject::tr("HOLD");
+      // 「止メ」「リピート」表示。
+      for (auto repeatInfo : repeatInfos) {
+        int repeatStartFrame =
+            repeatInfo.repeatChunkStartFrame + repeatInfo.repeatChunkLength;
+
+        // スタートフレームが現在のページに含まれている場合に表示
+        if (repeatStartFrame < startFrame ||
+            startFrame + param(FrameLength) <= repeatStartFrame)
+          continue;
+
+        bool isRepeat = repeatInfo.repeatChunkLength > 1;
+
+        QString holdTxt =
+            (isRepeat) ? QObject::tr("REPEAT") : QObject::tr("HOLD");
         // insert line breaks to every characters
         for (int i = 1; i < holdTxt.size(); i += 2) holdTxt.insert(i, '\n');
         QRect boundingRect =
             QFontMetrics(painter.font())
                 .boundingRect(QRect(0, 0, mm2px(100), mm2px(100)),
                               Qt::AlignTop | Qt::AlignLeft, holdTxt);
-
-        int drawTxtFrame =
-            (repeatStartFrame > 1) ? repeatStartFrame + 1 : repeatStartFrame;
-        int oc     = occupiedColumns[c][0];
-        QRect rect = m_cellRects[dispArea][oc][drawTxtFrame];
+        int drawTxtFrame = (isRepeat) ? repeatStartFrame + 1 : repeatStartFrame;
+        int oc           = occupiedColumns[c][0];
+        QRect rect       = m_cellRects[dispArea][oc][drawTxtFrame];
         boundingRect.moveCenter(
             QPoint(rect.center().x(), rect.top() + boundingRect.height() / 2));
 
         // fill background of the label
-        if (dispArea == Area_Cells || repeatStartFrame > 1)
-          painter.fillRect(boundingRect, Qt::white);
+        painter.fillRect(boundingRect, Qt::white);
         painter.drawText(boundingRect, Qt::AlignCenter, holdTxt);
       }
     }
@@ -2039,26 +2041,20 @@ void XSheetPDFTemplate::checkTerekoColumns() {
 //---------------------------------------------------------
 
 void XSheetPDFTemplate::checkRepeatColumns() {
+  m_repeatColumns.clear();
+
+  // リピート判定される最小の繰り返し長さ
+  int minimumRepeatLength = MyParams::instance()->minimumRepeatLength();
+
   // 各表示エリアについて
   for (auto area : m_columns.keys()) {
     // 動画欄ではリピート表記をしないのでスキップ
     if (area == Area_Cells) continue;
 
-    QList<RepeatInfo> repeatInfos;
-    QList<TerekoInfo> terekoInfos =
-        m_terekoColumns.value(area, QList<TerekoInfo>());
+    QMap<int, QList<RepeatInfo>> repeatColumnsInfo;
     ColumnsData data = m_columns[area];
     for (int cId = 0; cId < data.size(); cId++) {
-      QString levelName = data[cId].name;
-      // テレコ列はリピートにしない
-      bool isTerekoColumn = false;
-      for (auto ti : terekoInfos) {
-        if (ti.levelName == levelName) {
-          isTerekoColumn = true;
-          break;
-        }
-      }
-      if (isTerekoColumn) continue;
+      QList<RepeatInfo> repeatInfos;
 
       // とりあえずコマの内容をダンプする（Holdコマを展開する）
       QList<QString> dumpCells;
@@ -2072,38 +2068,124 @@ void XSheetPDFTemplate::checkRepeatColumns() {
           dumpCells.append(cell.frame);
       }
 
-      // リピート範囲の探索
-      QList<QString> repBlock;
-      for (int repF = 0; repF < dumpCells.size() / 2; repF++) {
-        repBlock.append(dumpCells[repF]);
+      //--- 止メ列のチェック ---
+      bool isAllHoldFrame = true;
+      QString firstCell   = dumpCells.first();
+      for (auto cell : dumpCells) {
+        if (cell != firstCell) {
+          isAllHoldFrame = false;
+          break;
+        }
+      }
+      if (isAllHoldFrame) {
+        if (firstCell !=
+            XdtsFrameDataItem::
+                SYMBOL_NULL_CELL) {  // 「×止メ」という書き方はしない
+          repeatInfos.append(
+              {0, 1,
+               dumpCells.size()});  // repeatChunkLengthが1なのは止メの場合のみ
+          repeatColumnsInfo.insert(cId, repeatInfos);
+        }
+        continue;  // 次のcIdへ
+      }
+      //--- 止メ列のチェックここまで ---
 
-        // チェック
-        bool isRepeated  = true;
-        int frameInBlock = 0;
-        for (int f = repF + 1; f < dumpCells.size(); f++) {
-          // dumpCellsのラストがdurationをはみ出し、かつ空コマの場合はbreakしてリピート達成
-          if (f == dumpCells.size() - 1 && f >= m_duration &&
-              dumpCells[f] == XdtsFrameDataItem::SYMBOL_NULL_CELL)
-            break;
-          // 周期性が崩れた場合、break
-          if (dumpCells[f] != repBlock[frameInBlock]) {
-            isRepeated = false;
+      // ひとつ前のリピート明けのフレームを保持しておく
+      int previousRepeatEndFrame = 0;
+
+      // チャンクの開始フレーム fn 毎に
+      for (int fn = 0; fn < dumpCells.count() - 4; fn++) {
+        // チャンクの開始フレームは、Holdコマではない
+        if (fn != 0 && data[cId].cells[fn].frame.isEmpty()) continue;
+        // ひとつ前のリピート明けのフレーム～fn-1番目のコマにfnと同じ動画番号があったら、
+        // 「最初の番号が繰り返し対象外のタイミングにある場合リピート表記しない」の
+        // 条件を満たすので、continueしてfnを進める
+        QString fn_cell    = dumpCells[fn];
+        bool foundSameCell = false;
+        for (int tmpf = previousRepeatEndFrame; tmpf < fn; tmpf++) {
+          if (dumpCells[tmpf] == fn_cell) {
+            foundSameCell = true;
             break;
           }
-          frameInBlock++;
-          if (frameInBlock == repBlock.size()) frameInBlock = 0;
         }
+        if (foundSameCell) continue;
 
-        // 周期性発見せず
-        if (!isRepeated) continue;
+        // チャンクの終了フレーム fm
+        //  チャンク内が全て同じ動画番号ではダメなので、fmの探索開始位置は、fnの次のHoldでないコマ
+        int fmStart;
+        bool foundFmStart = false;
+        for (fmStart = fn + 1; fmStart < dumpCells.count() - 3; fmStart++) {
+          if (data[cId].cells[fmStart].frame.isEmpty()) continue;
+          foundFmStart = true;
+          break;
+        }
+        if (!foundFmStart) continue;
 
-        // 周期性発見
-        repeatInfos.append({cId, repF + 1});
-        break;
-      }
+        // チャンクの終了フレーム fm 毎に
+        for (int fm = fmStart; fm < dumpCells.count() - 3; fm++) {
+          // fnとfmが同じ動画番号であったとき、ここから先fmを進めた場合のチャンク候補は全て
+          // 「最初の番号が繰り返しの中に2回以上登場する場合リピート表記しない」の
+          // 条件を満たすので、breakしてfnを進める
+          if (dumpCells[fm] == fn_cell) break;
+
+          bool repeatFound = false;
+          int chunkLength  = fm - fn + 1;
+
+          // このチャンクが繰り返しになっているかをチェックする
+          // リピート明けのコマはなにか番号が打たれている必要があるので、
+          // 繰り返しを満たし最後に番号が打たれているフレームを記憶する
+          int fl_lastNumbered = fm + 1;
+          // チャンク以降のフレーム
+          for (int fl = fm + 1; fl < dumpCells.count(); fl++) {
+            // チャンク内の対応するフレーム位置 fk
+            int fk = (fl - fn) % chunkLength + fn;
+            // fkとflの動画番号が一致、つまり繰り返している場合、
+            if (dumpCells[fk] == dumpCells[fl]) {
+              // flが最後のフレームでない場合、continueしてflを進める
+              if (fl < dumpCells.count() - 1) {
+                // 番号が打たれている場合、fl_lastNumberedを更新
+                if (!data[cId].cells[fl].frame.isEmpty()) fl_lastNumbered = fl;
+                continue;
+              }
+              // 最後のフレームに達していたら、リピート終わりのフレームは
+              // 最後のフレーム+1にする
+              else
+                fl_lastNumbered = fl + 1;
+            }
+            // 一致していない場合、なにか番号が打たれているかを確認
+            else {
+              if (!data[cId].cells[fl].frame.isEmpty()) fl_lastNumbered = fl;
+            }
+            // 繰り返しを満たし最後に番号が打たれているフレーム fl_lastNumbered
+            // を リピート明けのフレームとし、
+            // 繰り返し長が十分に長いかどうかをチェックする
+            int repeatLength = fl_lastNumbered - fn;
+            // チャンクが2回以上繰り返されていて、かつ閾値フレームよりも長い必要
+            if (repeatLength >= chunkLength * 2 &&
+                repeatLength >= minimumRepeatLength + chunkLength) {
+              // リピート発見！！情報を格納する。
+              repeatInfos.append({fn, chunkLength, fl_lastNumbered});
+              // チャンク開始位置をflまで進める。breakして次の fnへ
+              repeatFound            = true;
+              fn                     = fl_lastNumbered - 1;
+              previousRepeatEndFrame = fl_lastNumbered;
+              break;
+            }
+            // リピートならず。break して次のfmに進む
+            else
+              break;
+
+          }  // リピート終了フレーム fl
+
+          if (repeatFound) break;
+
+        }  // チャンクの終了フレーム fm
+
+      }  // チャンクの開始フレーム fn
+
+      if (!repeatInfos.isEmpty()) repeatColumnsInfo.insert(cId, repeatInfos);
     }
-
-    m_repeatColumns.insert(area, repeatInfos);
+    m_repeatColumns.insert(area, repeatColumnsInfo);
   }
 }
 //---------------------------------------------------------
@@ -2264,9 +2346,8 @@ void XsheetPdfPreviewPane::paintEvent(QPaintEvent* event) {
     painter.drawPixmap(m_clipRect, m_scaledScribblePixmap, m_clipRect);
 
     releaseClipRect();
-  }
-  else
-#endif 
+  } else
+#endif
   {
     painter.fillRect(rect(), Qt::white);
     painter.drawPixmap(0, 0, m_scaledPixmap);

@@ -48,6 +48,7 @@ MyParams::MyParams()
     , m_templateFont("MS Gothic")
 #endif
     , m_continuousLineMode(Line_MoreThan3s)
+    , m_minimumRepeatLength(24)
     , m_serialFrameNumber(true)
     , m_levelNameOnBottom(false)
     , m_capitalizeFirstLetter(true)
@@ -410,6 +411,8 @@ bool MyParams::loadUserSettingsIfExists() {
       (ContinuousLineMode)settings
           .value("ContinuousLineMode", (int)m_continuousLineMode)
           .toInt();
+  m_minimumRepeatLength =
+      settings.value("MinimumRepeatLength", m_minimumRepeatLength).toInt();
   m_serialFrameNumber =
       settings.value("SerialFrameNumber", m_serialFrameNumber).toBool();
   m_levelNameOnBottom =
@@ -508,6 +511,7 @@ void MyParams::saveUserSettings() {
   // settings.setValue("TemplateFont", m_templateFont);
   // settings.setValue("ContentsFont", m_contentsFont);
   settings.setValue("ContinuousLineMode", (int)m_continuousLineMode);
+  settings.setValue("MinimumRepeatLength", m_minimumRepeatLength);
   settings.setValue("SerialFrameNumber", m_serialFrameNumber);
   settings.setValue("LevelNameOnBottom", m_levelNameOnBottom);
   settings.setValue("CapitalizeFirstLetter", m_capitalizeFirstLetter);

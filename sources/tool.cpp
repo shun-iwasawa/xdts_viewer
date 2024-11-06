@@ -103,7 +103,10 @@ void BrushTool::setSize(BrushSize sizeId) {
   m_brushSize = (sizeId == Large) ? 30. : 4.;
 }
 
-void BrushTool::onActivate() { m_view->setScribbleMode(false); }
+bool BrushTool::onActivate() {
+  m_view->setScribbleMode(false);
+  return true;
+}
 
 void BrushTool::onEnter() {
   m_view->setCursor(MyParams::instance()->getBrushToolCursor());
@@ -150,7 +153,10 @@ void EraserTool::draw(QPainter& painter, QPointF pos, double scaleFactor) {
   painter.drawEllipse(pos, 30. * scaleFactor, 30. * scaleFactor);
 }
 
-void EraserTool::onActivate() { m_view->setScribbleMode(true); }
+bool EraserTool::onActivate() {
+  m_view->setScribbleMode(true);
+  return true;
+}
 
 //---------------------------------------
 

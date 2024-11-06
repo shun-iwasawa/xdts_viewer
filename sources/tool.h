@@ -21,7 +21,7 @@ protected:
 
 public:
   Tool(ToolId id);
-  void setView(XsheetPdfPreviewPane* view) { m_view = view; }
+  virtual void setView(XsheetPdfPreviewPane* view) { m_view = view; }
   void updateView();
 
   virtual void onPress(const QPointF& pos, Qt::KeyboardModifiers modifiers) {}
@@ -30,7 +30,7 @@ public:
   virtual void onMove(const QPointF& pos) {}
   virtual void onRelease(const QPointF& pos, QImage& canvasImg,
                          const QPointF& canvasPos) {}
-  virtual void onActivate() {}
+  virtual bool onActivate() { return true; }  // ツール変更可能ならtrueを返す
   virtual void draw(QPainter& painter, QPointF pos, double scaleFactor) {}
   virtual void addContextMenu(QMenu* menu) {}
   virtual void onEnter() {}
@@ -68,7 +68,7 @@ public:
               Qt::KeyboardModifiers modifiers, qreal pressure = 0.5) override;
   void onRelease(const QPointF& pos, QImage& canvasImg,
                  const QPointF& canvasPos) override;
-  void onActivate() override;
+  bool onActivate() override;
   void setSize(BrushSize sizeId);
   void onEnter() override;
 };
@@ -85,7 +85,7 @@ public:
   void onRelease(const QPointF& pos, QImage& canvasImg,
                  const QPointF& canvasPos) override;
   void draw(QPainter& painter, QPointF pos, double scaleFactor) override;
-  void onActivate() override;
+  bool onActivate() override;
 };
 
 class SelectionDragTool {

@@ -71,6 +71,7 @@ class PreferencesDialog : public QDialog {
       *m_capitalizeFirstLetterCB;
   QLineEdit* m_stampFolderPathField;
   QLineEdit* m_approvalNameField;
+  QLineEdit* m_emptyFrameForAEField;
   QMap<int, QLineEdit*> m_suffixEdits;
 
 public:
@@ -84,6 +85,7 @@ protected slots:
   void onStampBrowserButtonClicked();
   void onStampPathChanged();
   void onApprovalNameChanged();
+  void onEmptyFrameForAEChanged();
   void onCapitalizeFirstLetterSwitched();
   void onSuffixEdited();
 };

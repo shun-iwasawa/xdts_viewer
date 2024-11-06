@@ -439,6 +439,8 @@ PreferencesDialog::PreferencesDialog(QWidget* parent) : QDialog(parent) {
   m_stampFolderPathField         = new QLineEdit(this);
   m_approvalNameField            = new QLineEdit(this);
   QPushButton* stampBrowseButton = new QPushButton("...", this);
+  QLabel* aeLabel = new QLabel(tr("Empty Frame for AE Keyframe Data:"), this);
+  m_emptyFrameForAEField = new QLineEdit(this);
 
   for (int type = (int)Genga; type < (int)WorkFlowTypeCount; type++) {
     QLineEdit* edit = new QLineEdit(this);
@@ -458,6 +460,14 @@ PreferencesDialog::PreferencesDialog(QWidget* parent) : QDialog(parent) {
   m_continuousLineCombo->addItem(tr("More Than 3 Continuous Cells"),
                                  Line_MoreThan3s);
   m_continuousLineCombo->addItem(tr("None"), Line_None);
+
+  // タイムリマップは負値は0として扱われる
+  QString aeFieldToolTip =
+      tr("When using \"Copy After Effects Keyframe Data To Clipboard\" "
+         "tool,\nthis value will be the frame number for empty cells.");
+  aeLabel->setToolTip(aeFieldToolTip);
+  m_emptyFrameForAEField->setToolTip(aeFieldToolTip);
+  m_emptyFrameForAEField->setValidator(new QIntValidator(0, 99999));
 
   QVBoxLayout* mainLay = new QVBoxLayout();
   mainLay->setMargin(10);
@@ -516,6 +526,10 @@ PreferencesDialog::PreferencesDialog(QWidget* parent) : QDialog(parent) {
       viewLay->addWidget(m_approvalNameField, 7, 1,
                          Qt::AlignLeft | Qt::AlignVCenter);
 
+      viewLay->addWidget(aeLabel, 8, 0, Qt::AlignRight | Qt::AlignVCenter);
+      viewLay->addWidget(m_emptyFrameForAEField, 8, 1,
+                         Qt::AlignLeft | Qt::AlignVCenter);
+
       QGroupBox* suffixBox   = new QGroupBox(tr("File Suffixes"), this);
       QGridLayout* suffixLay = new QGridLayout();
       suffixLay->setMargin(5);
@@ -540,7 +554,7 @@ PreferencesDialog::PreferencesDialog(QWidget* parent) : QDialog(parent) {
       suffixLay->setColumnStretch(2, 0);
       suffixLay->setColumnStretch(3, 1);
       suffixBox->setLayout(suffixLay);
-      viewLay->addWidget(suffixBox, 8, 0, 1, 2);
+      viewLay->addWidget(suffixBox, 9, 0, 1, 2);
     }
     viewLay->setColumnStretch(0, 0);
     viewLay->setColumnStretch(1, 1);
@@ -573,6 +587,8 @@ PreferencesDialog::PreferencesDialog(QWidget* parent) : QDialog(parent) {
           SLOT(onStampPathChanged()));
   connect(m_approvalNameField, SIGNAL(editingFinished()), this,
           SLOT(onApprovalNameChanged()));
+  connect(m_emptyFrameForAEField, SIGNAL(editingFinished()), this,
+          SLOT(onEmptyFrameForAEChanged()));
   connect(stampBrowseButton, SIGNAL(clicked()), this,
           SLOT(onStampBrowserButtonClicked()));
   for (auto edit : m_suffixEdits.values())
@@ -596,6 +612,7 @@ void PreferencesDialog::syncUIs() {
   m_capitalizeFirstLetterCB->setChecked(p->isCapitalizeFirstLetter());
   m_stampFolderPathField->setText(p->userStampFolderPath());
   m_approvalNameField->setText(p->approvalName());
+  m_emptyFrameForAEField->setText(QString::number(p->emptyFrameForAE()));
 
   for (auto type : m_suffixEdits.keys()) {
     m_suffixEdits.value(type)->setText(p->suffix((WorkFlowType)type));
@@ -672,6 +689,13 @@ void PreferencesDialog::onApprovalNameChanged() {
   QMessageBox::information(this, tr("Approval Stamp Name Has Specified."),
                            tr("The Change Will Be Applied When You Launch the "
                               "Application Next Time."));
+}
+
+void PreferencesDialog::onEmptyFrameForAEChanged() {
+  int newVal = m_emptyFrameForAEField->text().toInt();
+  if (newVal == MyParams::instance()->emptyFrameForAE()) return;
+  MyParams::instance()->setEmptyFrameForAE(newVal);
+  // 特に画面に変化はない
 }
 
 void PreferencesDialog::onLineColorChanged(const QColor& color) {

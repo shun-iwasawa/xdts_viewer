@@ -10,6 +10,7 @@ set(MOC_HEADERS
     myparams.h
     tool.h
     dialogs.h
+    aetool.h
     )
 
 set(HEADERS
@@ -20,17 +21,18 @@ set(HEADERS
 )
 
 set(SOURCES
-main.cpp
-mywindow.cpp
-xdtsio.cpp
-xsheetpreviewarea.cpp
-myparams.cpp
-tool.cpp
-selectiontool.cpp
-pathutils.cpp
-commandmanager.cpp
-linetool.cpp
-dialogs.cpp
+    main.cpp
+    mywindow.cpp
+    xdtsio.cpp
+    xsheetpreviewarea.cpp
+    myparams.cpp
+    tool.cpp
+    selectiontool.cpp
+    pathutils.cpp
+    commandmanager.cpp
+    linetool.cpp
+    dialogs.cpp
+    aetool.cpp
 )
 
 #-----------------------------------------------------------------------------

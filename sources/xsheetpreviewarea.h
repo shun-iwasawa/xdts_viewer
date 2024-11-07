@@ -160,10 +160,13 @@ protected:
   // QMap<ExportArea, QMap<QString, QList<int> >> m_terekoColumns;
 
   struct RepeatInfo {
-    int colId;
-    int repeatStartFrame;  // リピート開始フレーム。1の場合は「止メ」
+    int repeatChunkStartFrame;  // チャンクのスタート位置
+    int repeatChunkLength;      // チャンクの長さ
+    int repeatEndFrame;         // 繰り返しの終わりフレーム
   };
-  QMap<ExportArea, QList<RepeatInfo>> m_repeatColumns;
+
+  // QMap<int,QList<RepeatInfo>> → colId ごとのリピート情報
+  QMap<ExportArea, QMap<int, QList<RepeatInfo>>> m_repeatColumns;
 
   int m_duration;
   int m_longestDuration;  // 一番長い列の長さ

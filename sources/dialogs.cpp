@@ -428,7 +428,8 @@ PreferencesDialog::PreferencesDialog(QWidget* parent) : QDialog(parent) {
   // m_templateFontCB = new QFontComboBox(this);
   // m_contentsFontCB = new QFontComboBox(this);
 
-  m_continuousLineCombo = new QComboBox(this);
+  m_continuousLineCombo      = new QComboBox(this);
+  m_minimumRepeatLengthField = new QLineEdit(this);
   m_serialFrameNumberCB =
       new QCheckBox(tr("Put Serial Frame Numbers Over Pages"), this);
   m_levelNameOnBottomCB =
@@ -452,7 +453,7 @@ PreferencesDialog::PreferencesDialog(QWidget* parent) : QDialog(parent) {
 
   m_languageCombo->addItem("English", "en");
   m_languageCombo->addItem(QString::fromLocal8Bit("日本語"), "ja");
-
+  m_lineColorButton->setFocusPolicy(Qt::NoFocus);
   stampBrowseButton->setFixedSize(20, 20);
   stampBrowseButton->setFocusPolicy(Qt::NoFocus);
   m_lineColorDialog->setOption(QColorDialog::NoButtons, true);
@@ -460,7 +461,7 @@ PreferencesDialog::PreferencesDialog(QWidget* parent) : QDialog(parent) {
   m_continuousLineCombo->addItem(tr("More Than 3 Continuous Cells"),
                                  Line_MoreThan3s);
   m_continuousLineCombo->addItem(tr("None"), Line_None);
-
+  m_minimumRepeatLengthField->setValidator(new QIntValidator(2, 999));
   // タイムリマップは負値は0として扱われる
   QString aeFieldToolTip =
       tr("When using \"Copy After Effects Keyframe Data To Clipboard\" "
@@ -468,6 +469,7 @@ PreferencesDialog::PreferencesDialog(QWidget* parent) : QDialog(parent) {
   aeLabel->setToolTip(aeFieldToolTip);
   m_emptyFrameForAEField->setToolTip(aeFieldToolTip);
   m_emptyFrameForAEField->setValidator(new QIntValidator(0, 99999));
+  closeButton->setFocusPolicy(Qt::NoFocus);
 
   QVBoxLayout* mainLay = new QVBoxLayout();
   mainLay->setMargin(10);
@@ -503,14 +505,20 @@ PreferencesDialog::PreferencesDialog(QWidget* parent) : QDialog(parent) {
       viewLay->addWidget(m_continuousLineCombo, 2, 1,
                          Qt::AlignLeft | Qt::AlignVCenter);
 
-      viewLay->addWidget(m_serialFrameNumberCB, 3, 0, 1, 2,
-                         Qt::AlignLeft | Qt::AlignVCenter);
-      viewLay->addWidget(m_levelNameOnBottomCB, 4, 0, 1, 2,
-                         Qt::AlignLeft | Qt::AlignVCenter);
-      viewLay->addWidget(m_capitalizeFirstLetterCB, 5, 0, 1, 2,
+      viewLay->addWidget(
+          new QLabel(tr("Minimum Frame Length\nfor \"REPEAT\" symbol:"), this),
+          3, 0, Qt::AlignRight | Qt::AlignVCenter);
+      viewLay->addWidget(m_minimumRepeatLengthField, 3, 1,
                          Qt::AlignLeft | Qt::AlignVCenter);
 
-      viewLay->addWidget(new QLabel(tr("User Stamps Folder:"), this), 6, 0,
+      viewLay->addWidget(m_serialFrameNumberCB, 4, 0, 1, 2,
+                         Qt::AlignLeft | Qt::AlignVCenter);
+      viewLay->addWidget(m_levelNameOnBottomCB, 5, 0, 1, 2,
+                         Qt::AlignLeft | Qt::AlignVCenter);
+      viewLay->addWidget(m_capitalizeFirstLetterCB, 6, 0, 1, 2,
+                         Qt::AlignLeft | Qt::AlignVCenter);
+
+      viewLay->addWidget(new QLabel(tr("User Stamps Folder:"), this), 7, 0,
                          Qt::AlignRight | Qt::AlignVCenter);
       QHBoxLayout* stampPathLay = new QHBoxLayout();
       stampPathLay->setMargin(0);
@@ -519,15 +527,15 @@ PreferencesDialog::PreferencesDialog(QWidget* parent) : QDialog(parent) {
         stampPathLay->addWidget(m_stampFolderPathField, 1);
         stampPathLay->addWidget(stampBrowseButton, 0);
       }
-      viewLay->addLayout(stampPathLay, 6, 1);
+      viewLay->addLayout(stampPathLay, 7, 1);
 
-      viewLay->addWidget(new QLabel(tr("Approval Stamp Name:"), this), 7, 0,
+      viewLay->addWidget(new QLabel(tr("Approval Stamp Name:"), this), 8, 0,
                          Qt::AlignRight | Qt::AlignVCenter);
-      viewLay->addWidget(m_approvalNameField, 7, 1,
+      viewLay->addWidget(m_approvalNameField, 8, 1,
                          Qt::AlignLeft | Qt::AlignVCenter);
 
-      viewLay->addWidget(aeLabel, 8, 0, Qt::AlignRight | Qt::AlignVCenter);
-      viewLay->addWidget(m_emptyFrameForAEField, 8, 1,
+      viewLay->addWidget(aeLabel, 9, 0, Qt::AlignRight | Qt::AlignVCenter);
+      viewLay->addWidget(m_emptyFrameForAEField, 9, 1,
                          Qt::AlignLeft | Qt::AlignVCenter);
 
       QGroupBox* suffixBox   = new QGroupBox(tr("File Suffixes"), this);
@@ -554,7 +562,7 @@ PreferencesDialog::PreferencesDialog(QWidget* parent) : QDialog(parent) {
       suffixLay->setColumnStretch(2, 0);
       suffixLay->setColumnStretch(3, 1);
       suffixBox->setLayout(suffixLay);
-      viewLay->addWidget(suffixBox, 9, 0, 1, 2);
+      viewLay->addWidget(suffixBox, 10, 0, 1, 2);
     }
     viewLay->setColumnStretch(0, 0);
     viewLay->setColumnStretch(1, 1);
@@ -576,6 +584,8 @@ PreferencesDialog::PreferencesDialog(QWidget* parent) : QDialog(parent) {
   // connect(m_contentsFontCB, SIGNAL(activated(int)), this,
   // SLOT(onViewPreferencesChanged()));
   connect(m_continuousLineCombo, SIGNAL(activated(int)), this,
+          SLOT(onViewPreferencesChanged()));
+  connect(m_minimumRepeatLengthField, SIGNAL(editingFinished()), this,
           SLOT(onViewPreferencesChanged()));
   connect(m_serialFrameNumberCB, SIGNAL(clicked(bool)), this,
           SLOT(onViewPreferencesChanged()));
@@ -606,7 +616,8 @@ void PreferencesDialog::syncUIs() {
   // m_contentsFontCB->setCurrentFont(QFont(p->contentsFont()));
   m_continuousLineCombo->setCurrentIndex(
       m_continuousLineCombo->findData(p->continuousLineMode()));
-
+  m_minimumRepeatLengthField->setText(
+      QString::number(p->minimumRepeatLength()));
   m_serialFrameNumberCB->setChecked(p->isSerialFrameNumber());
   m_levelNameOnBottomCB->setChecked(p->isLevelNameOnBottom());
   m_capitalizeFirstLetterCB->setChecked(p->isCapitalizeFirstLetter());
@@ -646,6 +657,7 @@ void PreferencesDialog::onViewPreferencesChanged() {
   // p->setContentsFont(m_contentsFontCB->currentFont().family());
   p->setContinuousLineMode(
       (ContinuousLineMode)m_continuousLineCombo->currentData().toInt());
+  p->setMinimumRepeatLength(m_minimumRepeatLengthField->text().toInt());
   p->setIsSerialFrameNumber(m_serialFrameNumberCB->isChecked());
   p->setIsLevelNameOnBottom(m_levelNameOnBottomCB->isChecked());
   p->notifySomethingChanged();

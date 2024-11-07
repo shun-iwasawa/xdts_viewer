@@ -74,6 +74,7 @@ class MyParams : public QObject  // singleton
   QString m_templateFont;
   QString m_contentsFont;
   ContinuousLineMode m_continuousLineMode;
+  int m_minimumRepeatLength;
   bool m_serialFrameNumber;
   bool m_levelNameOnBottom;
   bool m_capitalizeFirstLetter;
@@ -190,6 +191,11 @@ public:
     m_continuousLineMode = val;
   }
   ContinuousLineMode continuousLineMode() const { return m_continuousLineMode; }
+
+  void setMinimumRepeatLength(const int length) {
+    m_minimumRepeatLength = length;
+  }
+  int minimumRepeatLength() { return m_minimumRepeatLength; }
 
   void setIsSerialFrameNumber(bool val) { m_serialFrameNumber = val; }
   bool isSerialFrameNumber() const { return m_serialFrameNumber; }

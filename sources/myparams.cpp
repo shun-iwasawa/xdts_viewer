@@ -58,6 +58,7 @@ MyParams::MyParams()
     , m_isFormatDirty(false)
     , m_userStampFolderPath()
     , m_approvalName()
+    , m_emptyFrameForAE(100)
     , m_expandColumns(true)
     , m_mixUpColumns(true)
     , m_backsideImgPath()
@@ -418,6 +419,8 @@ bool MyParams::loadUserSettingsIfExists() {
   m_userStampFolderPath =
       settings.value("UserStampFolderPath", m_userStampFolderPath).toString();
   m_approvalName = settings.value("ApprovalName", m_approvalName).toString();
+  m_emptyFrameForAE =
+      settings.value("EmptyFrameForAE", m_emptyFrameForAE).toInt();
   settings.endGroup();
   return true;
 }
@@ -511,13 +514,15 @@ void MyParams::saveUserSettings() {
   settings.setValue("LastOpenedXdtsPath", currentXdtsPath());
   settings.setValue("UserStampFolderPath", m_userStampFolderPath);
   settings.setValue("ApprovalName", m_approvalName);
+  settings.setValue("EmptyFrameForAE", m_emptyFrameForAE);
   settings.endGroup();
 }
 
 void MyParams::setCurrentTool(ToolId id) {
   if (m_currentToolId == id) return;
-  m_currentToolId = id;
-  currentTool()->onActivate();
+  ToolId previousToolId = m_currentToolId;
+  m_currentToolId       = id;
+  if (!currentTool()->onActivate()) m_currentToolId = previousToolId;
   emit toolSwitched();
 }
 

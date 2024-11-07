@@ -274,6 +274,14 @@ MyWindow::MyWindow()
   stampToolButton->setMenu(stampMenu);
   stampToolButton->setStyle(new MyToolButtonProxyStyle);
 
+  // AEタイムリマップ書き出しツール
+  QAction* aeToolAct =
+      toolBar->addAction(QIcon(":Resources/ae.svg"),
+                         tr("Copy After Effects Keyframe Data To Clipboard"));
+  aeToolAct->setCheckable(true);
+  aeToolAct->setData(Tool_AE);
+  m_toolActionGroup->addAction(aeToolAct);
+
   m_toolActionGroup->setExclusive(true);
 
   toolBar->addSeparator();

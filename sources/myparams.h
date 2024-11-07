@@ -19,7 +19,14 @@ class XsheetPdfPreviewPane;
 enum ExportArea { Area_Cells = 0, Area_Actions, Area_Unspecified };
 enum ContinuousLineMode { Line_Always = 0, Line_MoreThan3s, Line_None };
 
-enum ToolId { Tool_Brush, Tool_Eraser, Tool_Selection, Tool_Stamp, Tool_Line };
+enum ToolId {
+  Tool_Brush,
+  Tool_Eraser,
+  Tool_Selection,
+  Tool_Stamp,
+  Tool_Line,
+  Tool_AE
+};
 
 struct ColumnData {
   QVector<FrameData> cells;
@@ -72,6 +79,7 @@ class MyParams : public QObject  // singleton
   bool m_capitalizeFirstLetter;
   QString m_userStampFolderPath;
   QString m_approvalName;
+  int m_emptyFrameForAE;
 
   QMap<WorkFlowType, QString>
       m_suffixes;  // reserved file suffixes by workflows
@@ -199,6 +207,9 @@ public:
 
   const QString& approvalName() { return m_approvalName; }
   void setApprovalName(const QString& name) { m_approvalName = name; }
+
+  const int emptyFrameForAE() { return m_emptyFrameForAE; }
+  void setEmptyFrameForAE(const int val) { m_emptyFrameForAE = val; }
 
   const QString& suffix(WorkFlowType type) { return m_suffixes[type]; }
   void setSuffix(WorkFlowType type, const QString& val) {

@@ -252,6 +252,20 @@ public:
   void checkRepeatColumns();
 
   QSize getPixelSize();
+
+  // AETool—p
+  // QMap<ExportArea, QList<QList<QRect>>> m_colLabelRects;
+  // QMap<ExportArea, QList<QList<QRect>>> m_cellRects;
+  QList<QList<QRect>> colLabelRects(ExportArea area) {
+    return m_colLabelRects.value(area, QList<QList<QRect>>());
+  }
+  QList<QList<QRect>> cellRects(ExportArea area) {
+    return m_cellRects.value(area, QList<QList<QRect>>());
+  }
+  QMap<ExportArea, ColumnsData> columns() { return m_columns; }
+  bool hasTerekoColumns(ExportArea area) {
+    return !m_terekoColumns.value(area, QList<TerekoInfo>()).isEmpty();
+  }
 };
 
 class XSheetPDFTemplate_B4_6sec : public XSheetPDFTemplate {

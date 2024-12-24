@@ -66,6 +66,7 @@ MyParams::MyParams()
     , m_backsideImgPathWithDenpyo()
     , m_isScannedGengaSheet(false)
     , m_dougaColumnOffset(0)
+    , m_cameraColumnAddition(0)
     , m_scannedSheetPageAmount(1)
     , m_startOverlapFrameLength(0)
     , m_endOverlapFrameLength(0)
@@ -224,6 +225,7 @@ void MyParams::resetValues() {
   m_mixUpColumns            = true;
   m_isScannedGengaSheet     = false;
   m_dougaColumnOffset       = 0;
+  m_cameraColumnAddition    = 0;
   m_scannedSheetPageAmount  = 1;
   m_startOverlapFrameLength = 0;
   m_endOverlapFrameLength   = 0;
@@ -253,6 +255,8 @@ void MyParams::resetValues() {
         settings.value("IsScannedGengaSheet", m_isScannedGengaSheet).toBool();
     m_dougaColumnOffset =
         settings.value("DougaColumnOffset", m_dougaColumnOffset).toInt();
+    m_cameraColumnAddition =
+        settings.value("CameraColumnAddition", m_cameraColumnAddition).toInt();
     m_scannedSheetPageAmount =
         settings.value("ScannedSheetPageAmount", m_scannedSheetPageAmount)
             .toInt();
@@ -355,6 +359,7 @@ bool MyParams::loadFormatSettingsIfExists() {
       settings.value("SkippedLevelNames", m_skippedLevelNames).toString();
   m_isScannedGengaSheet = settings.value("IsScannedGengaSheet", false).toBool();
   m_dougaColumnOffset   = settings.value("DougaColumnOffset", 0).toInt();
+  m_cameraColumnAddition = settings.value("CameraColumnAddition", 0).toInt();
   m_scannedSheetPageAmount =
       settings.value("ScannedSheetPageAmount", 1).toInt();
   m_startOverlapFrameLength =
@@ -390,6 +395,7 @@ void MyParams::saveFormatSettings() {
   settings.setValue("SkippedLevelNames", m_skippedLevelNames);
   settings.setValue("IsScannedGengaSheet", m_isScannedGengaSheet);
   settings.setValue("DougaColumnOffset", m_dougaColumnOffset);
+  settings.setValue("CameraColumnAddition", m_cameraColumnAddition);
   settings.setValue("ScannedSheetPageAmount", m_scannedSheetPageAmount);
   settings.setValue("StartOverlapFrameLength", m_startOverlapFrameLength);
   settings.setValue("EndOverlapFrameLength", m_endOverlapFrameLength);

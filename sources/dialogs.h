@@ -26,6 +26,7 @@ class SettingsDialog : public QDialog {
   QLineEdit* m_backsideImgPathField;
   QGroupBox* m_scannedGengaSheetGB;
   QLineEdit* m_dougaColumnOffsetEdit;
+  QLineEdit* m_cameraColumnAdditionEdit;
   QLineEdit* m_scannedSheetPageAmountEdit;
   QLabel* m_pageInfoLbl;
 
@@ -53,6 +54,7 @@ protected slots:
   void onBacksideImgBrowserButtonClicked();
   void onSkippedLevelNameChanged();
   void onDougaColumnOffsetEdited();
+  void onCameraColumnAdditionEdited();
   void onStartOLComboChanged(int);
   void onEndOLComboChanged(int);
   void onDenpyoCheckboxClicked(bool);

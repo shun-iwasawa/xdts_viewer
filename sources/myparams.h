@@ -60,6 +60,7 @@ class MyParams : public QObject  // singleton
   bool m_isScannedGengaSheet;  // 原画シートを紙からスキャン
                                // （原画欄の枠線を隠す）
   int m_dougaColumnOffset;  // 動画列の開始位置（原画シートが紙スキャンの場合）
+  int m_cameraColumnAddition;  // カメラ列の追加分（原画シートが紙スキャンの場合）
   int m_scannedSheetPageAmount;  // 手動で空ページを追加する
 
   // OL尺（フレーム長で保存する）
@@ -156,6 +157,11 @@ public:
   int dougaColumnOffset_Param() { return m_dougaColumnOffset; }
   int getDougaColumnOffset() {
     return (m_isScannedGengaSheet) ? m_dougaColumnOffset : 0;
+  }
+  void setCameraColumnAddition(int val) { m_cameraColumnAddition = val; }
+  int cameraColumnAddition_Param() { return m_cameraColumnAddition; }
+  int getCameraColumnAddition() {
+    return (m_isScannedGengaSheet) ? m_cameraColumnAddition : 0;
   }
 
   void setScannedSheetPageAmount(int val) { m_scannedSheetPageAmount = val; }

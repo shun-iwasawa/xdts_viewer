@@ -131,6 +131,7 @@ protected:
     int cameraBlockWidth;
     int infoHeaderHeight;
     int cellColumnOffset;
+    int cameraColumnAdditionWidth;
   } m_p;
 
   QMap<std::string, int> m_params;

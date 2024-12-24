@@ -47,9 +47,10 @@ SettingsDialog::SettingsDialog(QWidget* parent)
   m_mixUpColumnsCB  = new QCheckBox(tr("Mix-up Columns "), this);
   m_withDenpyoCB    = new QCheckBox(tr("Attach Composite Voucher"), this);
   m_backsideImgPathField = new QLineEdit(this);
-  m_scannedGengaSheetGB =
-      new QGroupBox(tr("Scanned Genga Sheet Mode ( Hide Genga Area Lines )"));
+  m_scannedGengaSheetGB  = new QGroupBox(
+      tr("Scanned Genga Sheet Mode ( Hide Genga && Camera Area Lines )"));
   m_dougaColumnOffsetEdit           = new QLineEdit(this);
+  m_cameraColumnAdditionEdit        = new QLineEdit(this);
   m_scannedSheetPageAmountEdit      = new QLineEdit(this);
   QPushButton* backsideBrowseButton = new QPushButton("...", this);
   QPushButton* closeButton          = new QPushButton(tr("OK"), this);
@@ -76,6 +77,8 @@ SettingsDialog::SettingsDialog(QWidget* parent)
   validator->setBottom(0);
   m_dougaColumnOffsetEdit->setValidator(validator);
   m_dougaColumnOffsetEdit->setMaximumWidth(50);
+  m_cameraColumnAdditionEdit->setValidator(validator);
+  m_cameraColumnAdditionEdit->setMaximumWidth(50);
   QIntValidator* pagesValidator = new QIntValidator();
   pagesValidator->setBottom(1);
   m_scannedSheetPageAmountEdit->setMaximumWidth(50);
@@ -142,19 +145,29 @@ SettingsDialog::SettingsDialog(QWidget* parent)
       formatLay->addWidget(m_skippedLevelNamesEdit, 7, 1, 1, 2);
 
       formatLay->addWidget(m_scannedGengaSheetGB, 8, 0, 1, 3);
-      QHBoxLayout* scannedGengaLay = new QHBoxLayout();
+      QGridLayout* scannedGengaLay = new QGridLayout();
       scannedGengaLay->setMargin(5);
-      scannedGengaLay->setSpacing(5);
+      scannedGengaLay->setHorizontalSpacing(5);
+      scannedGengaLay->setVerticalSpacing(10);
       {
         scannedGengaLay->addWidget(new QLabel(tr("Douga Column Offset:"), this),
-                                   0);
-        scannedGengaLay->addWidget(m_dougaColumnOffsetEdit, 1,
+                                   0, 0, Qt::AlignRight | Qt::AlignVCenter);
+        scannedGengaLay->addWidget(m_dougaColumnOffsetEdit, 0, 1,
                                    Qt::AlignLeft | Qt::AlignVCenter);
-        scannedGengaLay->addSpacing(10);
-        scannedGengaLay->addWidget(new QLabel(tr("Page Amount:"), this), 0);
-        scannedGengaLay->addWidget(m_scannedSheetPageAmountEdit, 1,
+        scannedGengaLay->addItem(new QSpacerItem(10, 1), 0, 2);
+        scannedGengaLay->addWidget(new QLabel(tr("Page Amount:"), this), 0, 3,
+                                   Qt::AlignRight | Qt::AlignVCenter);
+        scannedGengaLay->addWidget(m_scannedSheetPageAmountEdit, 0, 4,
+                                   Qt::AlignLeft | Qt::AlignVCenter);
+
+        scannedGengaLay->addWidget(
+            new QLabel(tr("Camera Column Addition:"), this), 1, 0,
+            Qt::AlignRight | Qt::AlignVCenter);
+        scannedGengaLay->addWidget(m_cameraColumnAdditionEdit, 1, 1,
                                    Qt::AlignLeft | Qt::AlignVCenter);
       }
+      scannedGengaLay->setColumnStretch(1, 1);
+      scannedGengaLay->setColumnStretch(4, 1);
       m_scannedGengaSheetGB->setLayout(scannedGengaLay);
 
       // Overlap frame length
@@ -216,6 +229,8 @@ SettingsDialog::SettingsDialog(QWidget* parent)
           SLOT(onFormatSettingsChanged()));
   connect(m_dougaColumnOffsetEdit, SIGNAL(editingFinished()), this,
           SLOT(onDougaColumnOffsetEdited()));
+  connect(m_cameraColumnAdditionEdit, SIGNAL(editingFinished()), this,
+          SLOT(onCameraColumnAdditionEdited()));
   connect(m_scannedSheetPageAmountEdit, SIGNAL(editingFinished()), this,
           SLOT(onFormatSettingsChanged()));
 
@@ -246,6 +261,8 @@ void SettingsDialog::syncUIs() {
   m_scannedGengaSheetGB->setChecked(p->isScannedGengaSheet());
   m_dougaColumnOffsetEdit->setText(
       QString::number(p->dougaColumnOffset_Param()));
+  m_cameraColumnAdditionEdit->setText(
+      QString::number(p->cameraColumnAddition_Param()));
   m_scannedSheetPageAmountEdit->setText(
       QString::number(p->scannedSheetPageAmount_Param()));
 
@@ -279,6 +296,13 @@ void SettingsDialog::onMixUpSwitched() {
 void SettingsDialog::onDougaColumnOffsetEdited() {
   MyParams::instance()->setDougaColumnOffset(
       m_dougaColumnOffsetEdit->text().toInt());
+  MyParams::instance()->notifyTemplateSwitched();
+  MyParams::instance()->setFormatDirty(true);
+}
+
+void SettingsDialog::onCameraColumnAdditionEdited() {
+  MyParams::instance()->setCameraColumnAddition(
+      m_cameraColumnAdditionEdit->text().toInt());
   MyParams::instance()->notifyTemplateSwitched();
   MyParams::instance()->setFormatDirty(true);
 }

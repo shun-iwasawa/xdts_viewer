@@ -894,7 +894,14 @@ void XSheetPDFTemplate::drawXsheetBody(QPainter& painter, int framePage,
     }
     drawCellsBlock(painter, bodyId);
     painter.translate(m_p.cellsBlockWidth, 0);
+    if (MyParams::instance()->isScannedGengaSheet()) {
+      setPenVisible(false);
+    }
     drawCameraBlock(painter, bodyId);
+    if (MyParams::instance()->isScannedGengaSheet()) {
+      setPenVisible(true);
+      painter.translate(m_p.cameraColumnAdditionWidth, 0);
+    }
   }
   painter.restore();
 }
@@ -1262,7 +1269,7 @@ int XSheetPDFTemplate::param(const std::string& id, int defaultValue) {
                           m_params.value(CellsColAmount);
         if (exColAmount > 0) width += exColAmount * param(CellsColWidth);
       }
-      width += m_p.cellColumnOffset;
+      width += m_p.cellColumnOffset + m_p.cameraColumnAdditionWidth;
       return width;
     }
     // —ñ‚ð‘‚â‚·ê‡‚ÍƒJƒƒ‰—ñ‚ð‹ò‚í‚È‚¢‚æ‚¤‚É‚·‚é
@@ -1369,6 +1376,10 @@ void XSheetPDFTemplate::setInfo(const XSheetPDFFormatInfo& info) {
   m_p.bodylabelTextSize_Small = param(HeaderHeight) / 2 - mm2px(1);
   m_p.cellColumnOffset =
       param(CellsColWidth) * MyParams::instance()->getDougaColumnOffset();
+  // not using CameraColWidth, because the camera column overflows to the cell
+  // area
+  m_p.cameraColumnAdditionWidth =
+      param(CellsColWidth) * MyParams::instance()->getCameraColumnAddition();
 }
 
 void XSheetPDFTemplate::drawXsheetTemplate(QPainter& painter, int framePage,

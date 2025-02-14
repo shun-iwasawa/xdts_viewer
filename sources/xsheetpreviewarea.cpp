@@ -1678,6 +1678,9 @@ void XSheetPDFTemplate::drawXsheetContents(QPainter& painter, int framePage,
       }  // 次の 描画フレーム f へ
 
       // 「止メ」「リピート」表示。
+      QFont font = painter.font();
+      font.setPixelSize(param(RowHeight) - mm2px(1));
+      painter.setFont(font);
       for (auto repeatInfo : repeatInfos) {
         int repeatStartFrame =
             repeatInfo.repeatChunkStartFrame + repeatInfo.repeatChunkLength;
@@ -1698,7 +1701,7 @@ void XSheetPDFTemplate::drawXsheetContents(QPainter& painter, int framePage,
                 .boundingRect(QRect(0, 0, mm2px(100), mm2px(100)),
                               Qt::AlignTop | Qt::AlignLeft, holdTxt);
         int drawTxtFrame = (isRepeat) ? repeatStartFrame + 1 : repeatStartFrame;
-        int oc           = occupiedColumns[c][0];
+        int oc           = occupiedColumns[c][repeatStartFrame - startFrame];
         QRect rect       = m_cellRects[dispArea][oc][drawTxtFrame];
         boundingRect.moveCenter(
             QPoint(rect.center().x(), rect.top() + boundingRect.height() / 2));

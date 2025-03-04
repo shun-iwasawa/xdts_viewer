@@ -19,6 +19,9 @@ class XsheetPdfPreviewPane;
 enum ExportArea { Area_Cells = 0, Area_Actions, Area_Unspecified };
 enum ContinuousLineMode { Line_Always = 0, Line_MoreThan3s, Line_None };
 
+// ƒeƒŒƒR‚Ìˆµ‚¢
+enum MixupColumnsType { Mixup_Manual = 0, Mixup_Auto };
+
 enum ToolId {
   Tool_Brush,
   Tool_Eraser,
@@ -52,7 +55,10 @@ class MyParams : public QObject  // singleton
   // Ex:  "*_e;*_k;*_s;lo"
   QString m_skippedLevelNames;
   bool m_expandColumns;
-  bool m_mixUpColumns;
+
+  MixupColumnsType m_mixUpColumnsType;
+  QMap<ExportArea, QMap<int, QList<int>>> m_mixUpColumnsKeyframes;
+
   bool m_withDenpyo;
   QString m_backsideImgPath;
   QString m_backsideImgPathWithDenpyo;
@@ -135,8 +141,27 @@ public:
   void setIsExpamdColumns(bool on) { m_expandColumns = on; }
   bool isExpandColumns() { return m_expandColumns; }
 
-  void setMixUpColumns(bool on) { m_mixUpColumns = on; }
-  bool isMixUpColumns() { return m_mixUpColumns; }
+  void setMixUpColumns(bool isAuto) {
+    m_mixUpColumnsType = (isAuto) ? Mixup_Auto : Mixup_Manual;
+  }
+  MixupColumnsType mixUpColumnsType() { return m_mixUpColumnsType; }
+
+  QMap<int, QList<int>>& mixUpColumnsKeyframes(ExportArea area);
+  void setMixupColumnsKeyframe(ExportArea area, int frame, QList<int> data) {
+    mixUpColumnsKeyframes(area).insert(frame, data);
+  }
+  void deleteMixUpColumnsKeyframeAt(ExportArea area, int frame) {
+    mixUpColumnsKeyframes(area).remove(frame);
+  }
+  void clearMixUpColumnsKeyframes(ExportArea area) {
+    mixUpColumnsKeyframes(area).clear();
+  }
+  bool isMixUpColumnsKeyframesShared() {
+    return m_mixUpColumnsKeyframes.size() == 0 ||
+           (m_mixUpColumnsKeyframes.size() == 1 &&
+            m_mixUpColumnsKeyframes.keys()[0] == Area_Unspecified);
+  }
+  void unifyOrSeparateMixupColumnsKeyframes(bool unify);
 
   void setExportArea(const ExportArea val) { m_exportArea = val; }
   ExportArea exportArea() const { return m_exportArea; }

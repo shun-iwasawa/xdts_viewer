@@ -11,6 +11,7 @@ set(MOC_HEADERS
     tool.h
     dialogs.h
     aetool.h
+    mixupkeydialog.h
     )
 
 set(HEADERS
@@ -33,6 +34,7 @@ set(SOURCES
     linetool.cpp
     dialogs.cpp
     aetool.cpp
+    mixupkeydialog.cpp
 )
 
 #-----------------------------------------------------------------------------

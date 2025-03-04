@@ -61,7 +61,7 @@ MyParams::MyParams()
     , m_approvalName()
     , m_emptyFrameForAE(100)
     , m_expandColumns(true)
-    , m_mixUpColumns(true)
+    , m_mixUpColumnsType(Mixup_Auto)
     , m_backsideImgPath()
     , m_backsideImgPathWithDenpyo()
     , m_isScannedGengaSheet(false)
@@ -222,7 +222,8 @@ void MyParams::resetValues() {
   m_exportTemplateFont = "MS Gothic";
   m_exportContentsFont = "BIZ UDPGothic";
 #endif
-  m_mixUpColumns            = true;
+  m_mixUpColumnsType = Mixup_Auto;
+  m_mixUpColumnsKeyframes.clear();
   m_isScannedGengaSheet     = false;
   m_dougaColumnOffset       = 0;
   m_cameraColumnAddition    = 0;
@@ -236,7 +237,11 @@ void MyParams::resetValues() {
     settings.beginGroup("FormatSettings");
     m_templateName  = settings.value("TemplateName", m_templateName).toString();
     m_expandColumns = settings.value("ExpandColumns", m_expandColumns).toBool();
-    m_mixUpColumns  = settings.value("MixUpColumns", m_mixUpColumns).toBool();
+    m_mixUpColumnsType =
+        (settings.value("MixUpColumns", (m_mixUpColumnsType == Mixup_Auto))
+             .toBool())
+            ? Mixup_Auto
+            : Mixup_Manual;
     QString areaName =
         settings.value("ExportArea", exportAreaNameList[m_exportArea])
             .toString();
@@ -347,9 +352,32 @@ bool MyParams::loadFormatSettingsIfExists() {
   settings.beginGroup("FormatSettings");
   m_templateName  = settings.value("TemplateName", m_templateName).toString();
   m_expandColumns = settings.value("ExpandColumns", m_expandColumns).toBool();
-  m_mixUpColumns  = settings.value("MixUpColumns", true).toBool();
-  m_logoPath      = settings.value("LogoPath", m_logoPath).toString();
-  m_withDenpyo    = settings.value("WithDenpyo", m_withDenpyo).toBool();
+  m_mixUpColumnsType = (settings.value("MixUpColumns", true).toBool())
+                           ? Mixup_Auto
+                           : Mixup_Manual;
+
+  m_mixUpColumnsKeyframes.clear();
+  int keyAreaCount = settings.beginReadArray("MixUpColumnsKeyframes");
+  for (int i = 0; i < keyAreaCount; i++) {
+    settings.setArrayIndex(i);
+    ExportArea area = (ExportArea)settings.value("AreaId").toInt();
+    QMap<int, QList<int>> keyframes;
+    for (auto key : settings.childKeys()) {
+      if (key == "AreaId") continue;
+      int keyFrame = key.toInt();
+      QStringList colIdStrList =
+          settings.value(key).toString().split(",", Qt::SkipEmptyParts);
+      if (colIdStrList.isEmpty()) continue;
+      QList<int> colIdList;
+      for (auto colIdStr : colIdStrList) colIdList.append(colIdStr.toInt());
+      keyframes.insert(keyFrame, colIdList);
+    }
+    m_mixUpColumnsKeyframes.insert(area, keyframes);
+  }
+  settings.endArray();
+
+  m_logoPath   = settings.value("LogoPath", m_logoPath).toString();
+  m_withDenpyo = settings.value("WithDenpyo", m_withDenpyo).toBool();
   m_backsideImgPath =
       settings.value("BacksideImgPath", m_backsideImgPath).toString();
   m_backsideImgPathWithDenpyo =
@@ -386,7 +414,33 @@ void MyParams::saveFormatSettings() {
   settings.beginGroup("FormatSettings");
   settings.setValue("TemplateName", m_templateName);
   settings.setValue("ExpandColumns", m_expandColumns);
-  settings.setValue("MixUpColumns", m_mixUpColumns);
+  settings.setValue("MixUpColumns", m_mixUpColumnsType == Mixup_Auto);
+
+  settings.remove("MixUpColumnsKeyframes");
+  if (!m_mixUpColumnsKeyframes.isEmpty()) {
+    settings.beginWriteArray("MixUpColumnsKeyframes");
+    int i = 0;
+    for (auto area : m_mixUpColumnsKeyframes.keys()) {
+      QMap<int, QList<int>> keyframes = m_mixUpColumnsKeyframes.value(area);
+      if (keyframes.isEmpty()) continue;
+      settings.setArrayIndex(i);
+      settings.setValue("AreaId", (int)area);
+      for (auto frame : keyframes.keys()) {
+        QList<int> colIdList = keyframes.value(frame);
+        if (colIdList.isEmpty()) continue;
+        QString saveStr;
+        for (auto colId : colIdList) {
+          saveStr += QString::number(colId) + ",";
+        }
+        saveStr.chop(1);
+
+        settings.setValue(QString::number(frame), saveStr);
+      }
+      i++;
+    }
+    settings.endArray();
+  }
+
   settings.setValue("ExportArea", exportAreaNameList[m_exportArea]);
   settings.setValue("LogoPath", m_logoPath);
   settings.setValue("WithDenpyo", m_withDenpyo);
@@ -695,4 +749,41 @@ QString MyParams::backsideImgPath(bool asIs) const {
   if (asIs || !QDir::isRelativePath(retPath) || retPath.isEmpty())
     return retPath;
   return QDir(PathUtils::getResourceDirPath()).absoluteFilePath(retPath);
+}
+
+// AreaÇ™Ç†ÇÈèÍçáÇÕÇªÇÍÇï‘Ç∑ÅBUnspecifiedÇæÇØÇ™Ç†ÇÈèÍçáÇÕÇªÇøÇÁÇï‘Ç∑
+QMap<int, QList<int>>& MyParams::mixUpColumnsKeyframes(ExportArea area) {
+  if (m_mixUpColumnsKeyframes.contains(area))
+    return m_mixUpColumnsKeyframes[area];
+  if (m_mixUpColumnsKeyframes.contains(Area_Unspecified))
+    return m_mixUpColumnsKeyframes[Area_Unspecified];
+
+  // êVÇΩÇ…MapÇìoò^
+  ExportArea regArea =
+      (MyParams::isMixUpColumnsKeyframesShared()) ? Area_Unspecified : area;
+
+  m_mixUpColumnsKeyframes.insert(regArea, QMap<int, QList<int>>());
+  return m_mixUpColumnsKeyframes[regArea];
+}
+
+void MyParams::unifyOrSeparateMixupColumnsKeyframes(bool unify) {
+  if (unify) {
+    m_mixUpColumnsKeyframes.remove(Area_Unspecified);  // îOÇÃÇΩÇﬂ
+    if (m_mixUpColumnsKeyframes.contains(Area_Actions)) {
+      m_mixUpColumnsKeyframes.insert(
+          Area_Unspecified, m_mixUpColumnsKeyframes.value(Area_Actions));
+      m_mixUpColumnsKeyframes.remove(Area_Actions);
+    }
+    m_mixUpColumnsKeyframes.remove(Area_Cells);
+  } else {  // separate case
+    m_mixUpColumnsKeyframes.remove(Area_Actions);
+    m_mixUpColumnsKeyframes.remove(Area_Cells);
+    if (m_mixUpColumnsKeyframes.contains(Area_Unspecified)) {
+      m_mixUpColumnsKeyframes.insert(
+          Area_Actions, m_mixUpColumnsKeyframes.value(Area_Unspecified));
+      m_mixUpColumnsKeyframes.insert(
+          Area_Cells, m_mixUpColumnsKeyframes.value(Area_Unspecified));
+      m_mixUpColumnsKeyframes.remove(Area_Unspecified);
+    }
+  }
 }

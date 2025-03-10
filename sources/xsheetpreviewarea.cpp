@@ -1762,7 +1762,7 @@ void XSheetPDFTemplate::drawXsheetContents(QPainter& painter, int framePage,
         int drawTxtFrame = (isRepeat) ? repeatStartFrame + 1 : repeatStartFrame;
         int oc           = occupiedColumns[c][repeatStartFrame - startFrame];
         if (oc < 0) continue;
-        QRect rect = m_cellRects[dispArea][oc][drawTxtFrame];
+        QRect rect = m_cellRects[dispArea][oc][drawTxtFrame - startFrame];
         boundingRect.moveCenter(
             QPoint(rect.center().x(), rect.top() + boundingRect.height() / 2));
 

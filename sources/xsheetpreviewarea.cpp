@@ -10,6 +10,7 @@
 #include <QMenu>
 #include <QList>
 #include <QApplication>
+#include <QMessageBox>
 
 using namespace XSheetPDFTemplateParamIDs;
 int MyParams::PDF_Resolution = 250;
@@ -915,6 +916,88 @@ void XSheetPDFTemplate::setPenVisible(bool show) {
   }
 }
 
+// drawXsheetContentsから呼ばれる。テレコ情報を踏まえて
+// 各表示列の各フレームでの重ね順を記録する
+QList<QList<int>> XSheetPDFTemplate::getOccupiedColumns(ExportArea area,
+                                                        int startColId,
+                                                        int colsInPage,
+                                                        int startFrame) {
+  // テレコ情報を考慮
+  QList<TerekoInfo> terekoInfo =
+      m_terekoColumns.value(area, QList<TerekoInfo>{});
+  ColumnsData columns = m_columns.value(area);
+  // 元の列がどの位置に表示されるか。テレコが無ければ0…,1…,2…と入るはず
+  QList<QList<int>> occupiedColumns;
+
+  int c = 0;
+  for (int colId = startColId; c < colsInPage; c++, colId++) {
+    if (colId == columns.size()) break;
+    occupiedColumns.append(QList<int>{});
+  }
+
+  // XDTSのデータに含まれるテレコ列を検出する場合
+  if (MyParams::instance()->mixUpColumnsType() == Mixup_Auto) {
+    int r = 0;
+    for (int f = startFrame; r < param(FrameLength); r++, f++) {
+      c             = 0;
+      int lastColId = 0;
+      for (int colId = startColId; c < colsInPage; c++, colId++) {
+        if (colId == columns.size()) break;
+        // テレコの確認
+        bool isTereko = false;
+        for (auto ti : terekoInfo) {
+          if (ti.colIdSet.contains(colId) && ti.occupiedColIds.size() > f) {
+            if (ti.occupiedColIds[f] != colId)  // スキップされる列の場合
+              occupiedColumns[c].append(-1);
+            else  // テレコで現在中身のある列の場合
+              occupiedColumns[c].append(lastColId++);
+            isTereko = true;
+            break;
+          }
+        }
+        // テレコと無関係の列の場合、詰めて入れる
+        if (!isTereko) occupiedColumns[c].append(lastColId++);
+      }
+    }
+  }
+  // テレコをXDTS Viewer内で指定する場合
+  else {
+    QMap<int, QList<int>> mixUpColumnsKeyframes =
+        MyParams::instance()->mixUpColumnsKeyframes(area);
+
+    QMap<int, QList<int>>::iterator itr =
+        mixUpColumnsKeyframes.lowerBound(startFrame);
+    QList<int> colOrder;
+    // テレコなしの並び順
+    if (mixUpColumnsKeyframes.isEmpty() ||
+        itr == mixUpColumnsKeyframes.begin()) {
+      for (int col = 0; col < columns.size(); col++) colOrder.append(col);
+    }
+    // テレコキーフレームの値
+    else {
+      itr--;
+      colOrder = itr.value();
+    }
+
+    int r = 0;
+    for (int f = startFrame; r < param(FrameLength); r++, f++) {
+      if (mixUpColumnsKeyframes.contains(f)) {
+        colOrder = mixUpColumnsKeyframes.value(f);
+      }
+      c = 0;
+      for (int colId = startColId; c < colsInPage; c++, colId++) {
+        if (colId == columns.size()) break;
+        int oc = colOrder.indexOf(colId) - startColId;
+        // 欄外にはみ出している場合 TODO：ページをまたいだ時の表示の解決
+        if (oc >= colsInPage) oc = -1;
+        occupiedColumns[c].append(oc);
+      }
+    }
+  }
+
+  return occupiedColumns;
+}
+
 void XSheetPDFTemplate::drawInfoHeader(QPainter& painter) {
   painter.save();
   {
@@ -1326,8 +1409,12 @@ XSheetPDFTemplate::XSheetPDFTemplate(
     m_columns.insert(area, displayData);
   }
 
-  // テレコが有効な場合、テレコ列の有無の確認
-  if (MyParams::instance()->isMixUpColumns()) checkTerekoColumns();
+  // 自動テレコが有効な場合、テレコ列の有無の確認
+  if (MyParams::instance()->mixUpColumnsType() == Mixup_Auto)
+    checkTerekoColumns();
+  // 手動指定の場合、現在のテレコキーフレームの列数がm_columnsと合っているかを確認
+  else
+    checkMixupColumnsKeyframes();
 
   m_colLabelRects.insert(Area_Actions, QList<QList<QRect>>());
   m_colLabelRects.insert(Area_Cells, QList<QList<QRect>>());
@@ -1495,36 +1582,8 @@ void XSheetPDFTemplate::drawXsheetContents(QPainter& painter, int framePage,
     QList<TerekoInfo> terekoInfo =
         m_terekoColumns.value(area, QList<TerekoInfo>{});
     // 元の列がどの位置に表示されるか。テレコが無ければ0…,1…,2…と入るはず
-    QList<QList<int>> occupiedColumns;
-    {
-      int c = 0;
-      for (int colId = startColId; c < colsInPage; c++, colId++) {
-        if (colId == columns.size()) break;
-        occupiedColumns.append(QList<int>{});
-      }
-      int r = 0;
-      for (int f = startFrame; r < param(FrameLength); r++, f++) {
-        c             = 0;
-        int lastColId = 0;
-        for (int colId = startColId; c < colsInPage; c++, colId++) {
-          if (colId == columns.size()) break;
-          // テレコの確認
-          bool isTereko = false;
-          for (auto ti : terekoInfo) {
-            if (ti.colIdSet.contains(colId) && ti.occupiedColIds.size() > f) {
-              if (ti.occupiedColIds[f] != colId)  // スキップされる列の場合
-                occupiedColumns[c].append(-1);
-              else  // テレコで現在中身のある列の場合
-                occupiedColumns[c].append(lastColId++);
-              isTereko = true;
-              break;
-            }
-          }
-          // テレコと無関係の列の場合、詰めて入れる
-          if (!isTereko) occupiedColumns[c].append(lastColId++);
-        }
-      }
-    }
+    QList<QList<int>> occupiedColumns =
+        getOccupiedColumns(area, startColId, colsInPage, startFrame);
     // ↑このoccupiedColumnsの情報を使ってセルに書き込む！！
 
     QMap<int, QList<RepeatInfo>> repeatColumnInfos;
@@ -1702,7 +1761,8 @@ void XSheetPDFTemplate::drawXsheetContents(QPainter& painter, int framePage,
                               Qt::AlignTop | Qt::AlignLeft, holdTxt);
         int drawTxtFrame = (isRepeat) ? repeatStartFrame + 1 : repeatStartFrame;
         int oc           = occupiedColumns[c][repeatStartFrame - startFrame];
-        QRect rect       = m_cellRects[dispArea][oc][drawTxtFrame];
+        if (oc < 0) continue;
+        QRect rect = m_cellRects[dispArea][oc][drawTxtFrame];
         boundingRect.moveCenter(
             QPoint(rect.center().x(), rect.top() + boundingRect.height() / 2));
 
@@ -2049,6 +2109,56 @@ void XSheetPDFTemplate::checkTerekoColumns() {
 
     if (!occupiedColumnsList.isEmpty())
       m_terekoColumns.insert(area, occupiedColumnsList);
+  }
+}
+
+//---------------------------------------------------------
+
+void XSheetPDFTemplate::checkMixupColumnsKeyframes() {
+  // 列名の一覧を取得
+  QMap<ExportArea, QStringList> colNamesMap;
+  for (auto area : m_columns.keys()) {
+    ColumnsData columnsData = m_columns.value(area);
+    QStringList colNames;
+    for (auto columnData : columnsData) {
+      colNames.append(columnData.name);
+    }
+    colNamesMap.insert(area, colNames);
+  }
+
+  // 現在のキーフレームとm_columnsに齟齬があるかをチェックする
+  // m_columnsが複数で、内容が違う場合、キーフレームをシェアしていたらシェアを解除する
+  if (m_columns.size() == 2 &&
+      colNamesMap.values()[0] != colNamesMap.values()[1] &&
+      MyParams::instance()->isMixUpColumnsKeyframesShared()) {
+    MyParams::instance()->unifyOrSeparateMixupColumnsKeyframes(false);
+  }
+
+  bool somethingRemoved = false;
+
+  // 各エリアの列数とキーフレームの列数が一致しているか確認する
+  for (auto area : colNamesMap.keys()) {
+    QMap<int, QList<int>> keyframes =
+        MyParams::instance()->mixUpColumnsKeyframes(area);
+    if (keyframes.isEmpty()) continue;
+
+    // 列数が同じなら問題なし
+    if (keyframes.begin().value().size() == colNamesMap[area].size()) continue;
+
+    MyParams::instance()->clearMixUpColumnsKeyframes(area);
+    MyParams::instance()->setFormatDirty(true);
+    somethingRemoved = true;
+  }
+
+  // 違ったら警告を出してキーフレームをクリアする
+  // 保存されているテレコ列キーフレームの列数が、現在表示されている列数と一致しません。キーフレームはクリアされます。
+  if (somethingRemoved) {
+    QMessageBox::warning(
+        nullptr, QObject::tr("Warning"),
+        QObject::tr(
+            "The number of columns in the saved mix-up columns keyframe \n"
+            "does not match the number of columns currently displayed.\n"
+            "The keyframe will be cleared."));
   }
 }
 

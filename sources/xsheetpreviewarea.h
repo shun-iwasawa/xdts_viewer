@@ -230,6 +230,11 @@ protected:
 
   void setPenVisible(bool show);
 
+  // drawXsheetContentsから呼ばれる。テレコ情報を踏まえて
+  // 各表示列の各フレームでの重ね順を記録する
+  QList<QList<int>> getOccupiedColumns(ExportArea area, int startColId,
+                                       int colsInPage, int startFrame);
+
 public:
   XSheetPDFTemplate(const QMap<ExportArea, ColumnsData>& columns,
                     const int duration);
@@ -253,6 +258,7 @@ public:
   void setInfo(const XSheetPDFFormatInfo& info);
 
   void checkTerekoColumns();
+  void checkMixupColumnsKeyframes();
   void checkRepeatColumns();
 
   QSize getPixelSize();

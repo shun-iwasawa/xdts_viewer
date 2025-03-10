@@ -18,7 +18,8 @@ class SettingsDialog : public QDialog {
   // format
   QComboBox* m_templateCombo;
   QCheckBox* m_expandColumnsCB;
-  QCheckBox* m_mixUpColumnsCB;
+  QComboBox* m_mixUpColumnsCombo;
+  QPushButton* m_mixupKeyBtn;
   QLineEdit* m_logoImgPathField;
   QComboBox* m_exportAreaCombo;
   QLineEdit* m_skippedLevelNamesEdit;
@@ -48,7 +49,8 @@ public:
 protected slots:
   void onTemplateSwitched(int);
   void onExpandColumnsSwitched();
-  void onMixUpSwitched();
+  void onMixUpActivated();
+  void openMixupKeyDialog();
   void onFormatSettingsChanged();
   void onLogoImgBrowserButtonClicked();
   void onBacksideImgBrowserButtonClicked();

@@ -2,6 +2,9 @@
 #include "myparams.h"
 #include "pathutils.h"
 
+#include "mixupkeydialog.h"
+#include "xsheetpreviewarea.h"
+
 #include <QComboBox>
 #include <QLineEdit>
 #include <QPushButton>
@@ -19,7 +22,6 @@
 #include <QDir>
 #include <QPainter>
 #include <QTextEdit>
-#include <QMessageBox>
 
 namespace {
 void frame2SecKoma(int frame, int& sec, int& koma) {
@@ -43,9 +45,10 @@ SettingsDialog::SettingsDialog(QWidget* parent)
   m_exportAreaCombo         = new QComboBox(this);
   m_pageInfoLbl             = new QLabel(this);
   m_skippedLevelNamesEdit   = new QLineEdit(this);
-  m_expandColumnsCB = new QCheckBox(tr("Adaptively Expand Columns "), this);
-  m_mixUpColumnsCB  = new QCheckBox(tr("Mix-up Columns "), this);
-  m_withDenpyoCB    = new QCheckBox(tr("Attach Composite Voucher"), this);
+  m_expandColumnsCB   = new QCheckBox(tr("Adaptively Expand Columns "), this);
+  m_mixUpColumnsCombo = new QComboBox(this);
+  m_mixupKeyBtn       = new QPushButton(tr("Edit Mix-up Keys"), this);
+  m_withDenpyoCB      = new QCheckBox(tr("Attach Composite Voucher"), this);
   m_backsideImgPathField = new QLineEdit(this);
   m_scannedGengaSheetGB  = new QGroupBox(
       tr("Scanned Genga Sheet Mode ( Hide Genga && Camera Area Lines )"));
@@ -71,6 +74,12 @@ SettingsDialog::SettingsDialog(QWidget* parent)
   backsideBrowseButton->setFocusPolicy(Qt::NoFocus);
   m_exportAreaCombo->addItem(tr("ACTIONS"), Area_Actions);
   m_exportAreaCombo->addItem(tr("CELLS"), Area_Cells);
+
+  m_mixUpColumnsCombo->addItem(tr("Manually Specify Mix-up Keys"),
+                               Mixup_Manual);
+  m_mixUpColumnsCombo->addItem(tr("Automatically Detect from Data"),
+                               Mixup_Auto);
+  m_mixupKeyBtn->setFocusPolicy(Qt::NoFocus);
 
   m_scannedGengaSheetGB->setCheckable(true);
   QIntValidator* validator = new QIntValidator();
@@ -108,8 +117,12 @@ SettingsDialog::SettingsDialog(QWidget* parent)
       formatLay->addWidget(m_expandColumnsCB, 1, 0, 1, 3,
                            Qt::AlignLeft | Qt::AlignVCenter);
 
-      formatLay->addWidget(m_mixUpColumnsCB, 2, 0, 1, 3,
+      formatLay->addWidget(new QLabel(tr("Mix-up Columns:"), this), 2, 0,
+                           Qt::AlignRight | Qt::AlignVCenter);
+      formatLay->addWidget(m_mixUpColumnsCombo, 2, 1,
                            Qt::AlignLeft | Qt::AlignVCenter);
+      formatLay->addWidget(m_mixupKeyBtn, 2, 3,
+                           Qt::AlignRight | Qt::AlignVCenter);
 
       formatLay->addWidget(new QLabel(tr("Logo Image:"), this), 3, 0,
                            Qt::AlignRight | Qt::AlignVCenter);
@@ -209,8 +222,9 @@ SettingsDialog::SettingsDialog(QWidget* parent)
           SLOT(onTemplateSwitched(int)));
   connect(m_expandColumnsCB, SIGNAL(clicked(bool)), this,
           SLOT(onExpandColumnsSwitched()));
-  connect(m_mixUpColumnsCB, SIGNAL(clicked(bool)), this,
-          SLOT(onMixUpSwitched()));
+  connect(m_mixUpColumnsCombo, SIGNAL(activated(int)), this,
+          SLOT(onMixUpActivated()));
+  connect(m_mixupKeyBtn, SIGNAL(clicked()), this, SLOT(openMixupKeyDialog()));
   connect(m_logoImgPathField, SIGNAL(editingFinished()), this,
           SLOT(onFormatSettingsChanged()));
   connect(browseButton, SIGNAL(clicked()), this,
@@ -250,7 +264,11 @@ void SettingsDialog::syncUIs() {
   MyParams* p = MyParams::instance();
   m_templateCombo->setCurrentText(p->templateName());
   m_expandColumnsCB->setChecked(p->isExpandColumns());
-  m_mixUpColumnsCB->setChecked(p->isMixUpColumns());
+
+  m_mixUpColumnsCombo->setCurrentIndex(
+      m_mixUpColumnsCombo->findData(p->mixUpColumnsType()));
+  m_mixupKeyBtn->setEnabled(p->mixUpColumnsType() == Mixup_Manual);
+
   m_logoImgPathField->setText(p->logoPath(true));
   m_withDenpyoCB->setChecked(p->withDenpyo());
   m_backsideImgPathField->setText(p->backsideImgPath(true));
@@ -287,10 +305,24 @@ void SettingsDialog::onExpandColumnsSwitched() {
   MyParams::instance()->setFormatDirty(true);
 }
 
-void SettingsDialog::onMixUpSwitched() {
-  MyParams::instance()->setMixUpColumns(m_mixUpColumnsCB->isChecked());
+void SettingsDialog::onMixUpActivated() {
+  MixupColumnsType currentType =
+      (MixupColumnsType)m_mixUpColumnsCombo->currentData().toInt();
+  MyParams::instance()->setMixUpColumns(currentType == Mixup_Auto);
+  m_mixupKeyBtn->setEnabled(currentType == Mixup_Manual);
   MyParams::instance()->notifyTemplateSwitched();
   MyParams::instance()->setFormatDirty(true);
+}
+
+void SettingsDialog::openMixupKeyDialog() {
+  QMap<ExportArea, ColumnsData> columns =
+      MyParams::instance()->currentTemplate()->columns();
+  if (columns.isEmpty()) {
+    QMessageBox::warning(this, tr("Warning"), tr("No columns found!"));
+    return;
+  }
+  MixupKeyDialog dialog;
+  dialog.exec();
 }
 
 void SettingsDialog::onDougaColumnOffsetEdited() {

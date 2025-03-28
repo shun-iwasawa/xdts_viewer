@@ -1619,6 +1619,9 @@ void XSheetPDFTemplate::drawXsheetContents(QPainter& painter, int framePage,
 
         // •`‰æ‚·‚é—ñindex
         int oc = occupiedColumns[c][r];
+
+        if (r % 72 == 0) topColumnIndex = oc;
+
         // ƒeƒŒƒR—ñ‚Å”ñ•\¦‚Ìê‡ continue
         if (oc < 0) {
           prevColumnIndex = oc;
@@ -1629,7 +1632,6 @@ void XSheetPDFTemplate::drawXsheetContents(QPainter& painter, int framePage,
         if (r % 72 == 0) {
           drawLevelName(painter, m_colLabelRects[dispArea][oc][r / 72],
                         columnName);
-          topColumnIndex = oc;
         }
         // draw level name on bottom
         if (m_info.drawLevelNameOnBottom && r % 72 == 37 &&

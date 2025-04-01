@@ -2644,6 +2644,9 @@ double XsheetPdfPreviewPane::doZoom(bool zoomIn) {
   double oldScaleFactor = m_scaleFactor;
   m_scaleFactor         = getQuantizedZoomFactor(m_scaleFactor, zoomIn);
 
+  if (MyParams::instance()->isFitToWindow())
+    MyParams::instance()->setIsFitToWindow(false);
+
   resize(m_pixmap.size() * m_scaleFactor);
   invalidateCanvas();
   update();
@@ -2751,12 +2754,17 @@ void XsheetPdfPreviewArea::contextMenuEvent(QContextMenuEvent* event) {
   MyParams::instance()->currentTool()->addContextMenu(menu);
 
   QAction* fitAction = menu->addAction(tr("Fit To Window"));
+  fitAction->setCheckable(true);
+  fitAction->setChecked(MyParams::instance()->isFitToWindow());
   connect(fitAction, SIGNAL(triggered()), this, SLOT(fitToWindow()));
   menu->exec(event->globalPos());
 }
 
 void XsheetPdfPreviewArea::fitToWindow() {
-  dynamic_cast<XsheetPdfPreviewPane*>(widget())->fitScaleTo(rect().size());
+  bool wasOn = MyParams::instance()->isFitToWindow();
+  MyParams::instance()->setIsFitToWindow(!wasOn);
+  if (!wasOn)
+    dynamic_cast<XsheetPdfPreviewPane*>(widget())->fitScaleTo(rect().size());
 }
 
 void XsheetPdfPreviewArea::wheelEvent(QWheelEvent* event) {
@@ -2822,6 +2830,14 @@ void XsheetPdfPreviewArea::keyPressEvent(QKeyEvent* event) {
 
   if (!event->isAccepted()) QScrollArea::keyPressEvent(event);
 }
+
+void XsheetPdfPreviewArea::resizeEvent(QResizeEvent* event) {
+  if (MyParams::instance()->isFitToWindow())
+    dynamic_cast<XsheetPdfPreviewPane*>(widget())->fitScaleTo(rect().size());
+
+  QScrollArea::resizeEvent(event);
+}
+
 void XsheetPdfPreviewArea::zoomIn() {
   QScrollBar* hScrollBar = horizontalScrollBar();
   QScrollBar* vScrollBar = verticalScrollBar();

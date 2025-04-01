@@ -105,11 +105,12 @@ class MyParams : public QObject  // singleton
   QMap<int, QImage> m_scribbleImages;
   QMap<int, bool> m_dirtyFlags;
 
-  // tools
+  // environment
   QMap<ToolId, Tool*> m_tools;
   ToolId m_currentToolId;
   QColor m_currentColor;
   QCursor m_brushCursor;
+  bool m_fitToWindow;
 
   // undo stack
   QUndoStack* m_undoStack;
@@ -293,6 +294,9 @@ public:
 
   const QColor currentColor() { return m_currentColor; }
   void setCurrentColor(QColor col) { m_currentColor = col; }
+
+  const bool isFitToWindow() { return m_fitToWindow; }
+  void setIsFitToWindow(const bool on) { m_fitToWindow = on; }
 
   QUndoStack* undoStack() { return m_undoStack; }
 

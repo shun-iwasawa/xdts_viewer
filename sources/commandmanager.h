@@ -6,7 +6,14 @@
 
 class QAction;
 
-enum CommandId { Cmd_Cut, Cmd_Copy, Cmd_Paste, Cmd_Delete };
+enum CommandId {
+  Cmd_Cut,
+  Cmd_Copy,
+  Cmd_Paste,
+  Cmd_Delete,
+  Cmd_PrevPage,
+  Cmd_NextPage
+};
 
 class CommandManager {  // singleton
   QMap<CommandId, QAction*> m_commands;

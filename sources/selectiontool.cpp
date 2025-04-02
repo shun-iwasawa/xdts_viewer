@@ -10,6 +10,7 @@
 #include <QMenu>
 #include <QKeyEvent>
 #include <QColorDialog>
+#include <QSettings>
 
 bool operator<(const QColor& a, const QColor& b) {
   return a.redF() < b.redF() || a.greenF() < b.greenF() ||
@@ -478,6 +479,15 @@ void SelectionTool::addContextMenu(QMenu* menu) {
 
   connect(fillCmd, SIGNAL(triggered()), this, SLOT(onFill()));
   connect(removeMatteCmd, SIGNAL(triggered()), this, SLOT(onRemoveMatte()));
+}
+
+void SelectionTool::saveToolState(QSettings& settings) {
+  settings.setValue("SelectionTool_Mode", (int)m_mode);
+}
+
+void SelectionTool::loadToolState(QSettings& settings) {
+  m_mode =
+      (SelectionMode)settings.value("SelectionTool_Mode", (int)m_mode).toInt();
 }
 
 void SelectionTool::select(const QRect& selectedRect,

@@ -138,8 +138,9 @@ MyWindow::MyWindow()
   // color selector
   QList<QColor> colors = {QColor(Qt::black), QColor(Qt::red), QColor(Qt::blue),
                           QColor(Qt::yellow), QColor(Qt::darkGreen)};
+  QColor currentColor  = MyParams::instance()->currentColor();
   m_currentColorAction =
-      toolBar->addAction(color2Icon(QColor(Qt::black)), tr("Current Color"));
+      toolBar->addAction(color2Icon(currentColor), tr("Current Color"));
   // 色選択のメニュー
   QToolButton* currentColorButton = qobject_cast<QToolButton*>(
       toolBar->widgetForAction(m_currentColorAction));
@@ -148,7 +149,7 @@ MyWindow::MyWindow()
   for (auto color : colors) {
     QAction* colorAction = currentColorMenu->addAction(color2Icon(color), "");
     colorAction->setCheckable(true);
-    if (color == QColor(Qt::black)) colorAction->setChecked(true);
+    if (color == currentColor) colorAction->setChecked(true);
     colorAction->setData(color);
     currentColorGroup->addAction(colorAction);
   }
@@ -157,11 +158,20 @@ MyWindow::MyWindow()
   currentColorButton->setStyle(new MyToolButtonProxyStyle);
 
   toolBar->addSeparator();
-  m_toolActionGroup = new QActionGroup(this);
+  m_toolActionGroup    = new QActionGroup(this);
+  ToolId currentToolId = MyParams::instance()->currentToolId();
+
+  QMap<BrushTool::BrushSize, QIcon> brushIcons = {
+      {BrushTool::Small, QIcon(":Resources/brush_small.svg")},
+      {BrushTool::Large, QIcon(":Resources/brush_large.svg")},
+  };
+  BrushTool::BrushSize currentBrushSize =
+      dynamic_cast<BrushTool*>(MyParams::instance()->getTool(Tool_Brush))
+          ->brushSizeId();
   QAction* brushToolAct =
-      toolBar->addAction(QIcon(":Resources/brush_small.svg"), tr("Brush (B)"));
+      toolBar->addAction(brushIcons.value(currentBrushSize), tr("Brush (B)"));
   brushToolAct->setCheckable(true);
-  brushToolAct->setChecked(true);
+  if (currentToolId == Tool_Brush) brushToolAct->setChecked(true);
   brushToolAct->setData(Tool_Brush);
   m_toolActionGroup->addAction(brushToolAct);
 
@@ -171,15 +181,16 @@ MyWindow::MyWindow()
   QMenu* brushMenu             = new QMenu(this);
   QActionGroup* brushSizeGroup = new QActionGroup(this);
   QAction* largeSize =
-      brushMenu->addAction(QIcon(":Resources/brush_large.svg"), tr("Large"));
+      brushMenu->addAction(brushIcons.value(BrushTool::Large), tr("Large"));
   largeSize->setCheckable(true);
   largeSize->setData(BrushTool::Large);
+  if (currentBrushSize == BrushTool::Large) largeSize->setChecked(true);
   brushSizeGroup->addAction(largeSize);
   QAction* smallSize =
-      brushMenu->addAction(QIcon(":Resources/brush_small.svg"), tr("Small"));
+      brushMenu->addAction(brushIcons.value(BrushTool::Small), tr("Small"));
   smallSize->setCheckable(true);
   smallSize->setData(BrushTool::Small);
-  smallSize->setChecked(true);
+  if (currentBrushSize == BrushTool::Small) smallSize->setChecked(true);
   brushSizeGroup->addAction(smallSize);
   brushSizeGroup->setExclusive(true);
   brushButton->setMenu(brushMenu);
@@ -188,12 +199,22 @@ MyWindow::MyWindow()
   QAction* eraserToolAct =
       toolBar->addAction(QIcon(":Resources/eraser.svg"), tr("Eraser (E)"));
   eraserToolAct->setCheckable(true);
+  if (currentToolId == Tool_Eraser) eraserToolAct->setChecked(true);
   eraserToolAct->setData(Tool_Eraser);
   m_toolActionGroup->addAction(eraserToolAct);
 
+  QMap<SelectionTool::SelectionMode, QIcon> selectionIcons = {
+      {SelectionTool::Rect, QIcon(":Resources/selection_rectangular.svg")},
+      {SelectionTool::FreeHand, QIcon(":Resources/selection_freehand.svg")},
+  };
+  SelectionTool::SelectionMode currentSelectionMode =
+      dynamic_cast<SelectionTool*>(
+          MyParams::instance()->getTool(Tool_Selection))
+          ->mode();
   QAction* selectionToolAct = toolBar->addAction(
-      QIcon(":Resources/selection_rectangular.svg"), tr("Selection (M)"));
+      selectionIcons.value(currentSelectionMode), tr("Selection (M)"));
   selectionToolAct->setCheckable(true);
+  if (currentToolId == Tool_Selection) selectionToolAct->setChecked(true);
   selectionToolAct->setData(Tool_Selection);
   m_toolActionGroup->addAction(selectionToolAct);
 
@@ -203,14 +224,16 @@ MyWindow::MyWindow()
   QMenu* selectionMenu             = new QMenu(this);
   QActionGroup* selectionModeGroup = new QActionGroup(this);
   QAction* rectMode                = selectionMenu->addAction(
-      QIcon(":Resources/selection_rectangular.svg"), tr("Rectangle"));
+      selectionIcons.value(SelectionTool::Rect), tr("Rectangle"));
   rectMode->setCheckable(true);
-  rectMode->setChecked(true);
+  if (currentSelectionMode == SelectionTool::Rect) rectMode->setChecked(true);
   rectMode->setData(SelectionTool::Rect);
   selectionModeGroup->addAction(rectMode);
   QAction* freehandMode = selectionMenu->addAction(
-      QIcon(":Resources/selection_freehand.svg"), tr("Freehand"));
+      selectionIcons.value(SelectionTool::FreeHand), tr("Freehand"));
   freehandMode->setCheckable(true);
+  if (currentSelectionMode == SelectionTool::FreeHand)
+    freehandMode->setChecked(true);
   freehandMode->setData(SelectionTool::FreeHand);
   selectionModeGroup->addAction(freehandMode);
   selectionModeGroup->setExclusive(true);
@@ -218,9 +241,19 @@ MyWindow::MyWindow()
   selectionToolButton->setStyle(new MyToolButtonProxyStyle);
 
   //---- Line Tool
-  QAction* lineToolAct =
-      toolBar->addAction(QIcon(":Resources/line_thin.svg"), tr("Line (U)"));
+  QStringList iconPaths = {
+      ":Resources/line_thin.svg",       ":Resources/line_thick.svg",
+      ":Resources/line_thin_arrow.svg", ":Resources/line_thick_arrow.svg",
+      ":Resources/line_double.svg",     ":Resources/line_dot.svg"};
+  QStringList lineTypeNames = {tr("Thin Line"),   tr("Thick Line"),
+                               tr("Thin Arrow"),  tr("Thick Arrow"),
+                               tr("Double Line"), tr("Dotted Line")};
+  LineId currentLineId =
+      dynamic_cast<LineTool*>(MyParams::instance()->getTool(Tool_Line))->type();
+  QAction* lineToolAct = toolBar->addAction(
+      QIcon(iconPaths.at((int)currentLineId)), tr("Line (U)"));
   lineToolAct->setCheckable(true);
+  if (currentToolId == Tool_Line) lineToolAct->setChecked(true);
   lineToolAct->setData(Tool_Line);
   m_toolActionGroup->addAction(lineToolAct);
 
@@ -229,18 +262,11 @@ MyWindow::MyWindow()
       qobject_cast<QToolButton*>(toolBar->widgetForAction(lineToolAct));
   QMenu* lineMenu             = new QMenu(this);
   QActionGroup* lineTypeGroup = new QActionGroup(this);
-  QStringList iconPaths       = {
-      ":Resources/line_thin.svg",       ":Resources/line_thick.svg",
-      ":Resources/line_thin_arrow.svg", ":Resources/line_thick_arrow.svg",
-      ":Resources/line_double.svg",     ":Resources/line_dot.svg"};
-  QStringList lineTypeNames = {tr("Thin Line"),   tr("Thick Line"),
-                               tr("Thin Arrow"),  tr("Thick Arrow"),
-                               tr("Double Line"), tr("Dotted Line")};
   for (int id = (int)ThinLine; id < (int)TypeCount; id++) {
     QAction* typeAction =
         lineMenu->addAction(QIcon(iconPaths[id]), lineTypeNames[id]);
     typeAction->setCheckable(true);
-    if (id == 0) typeAction->setChecked(true);
+    if (id == (int)currentLineId) typeAction->setChecked(true);
     typeAction->setData(id);
     lineTypeGroup->addAction(typeAction);
   }
@@ -251,6 +277,7 @@ MyWindow::MyWindow()
   QAction* stampToolAct =
       toolBar->addAction(QIcon(":Resources/stamp.svg"), tr("Stamp (S)"));
   stampToolAct->setCheckable(true);
+  if (currentToolId == Tool_Stamp) stampToolAct->setChecked(true);
   stampToolAct->setData(Tool_Stamp);
   m_toolActionGroup->addAction(stampToolAct);
 
@@ -261,12 +288,13 @@ MyWindow::MyWindow()
   QActionGroup* stampTypeGroup = new QActionGroup(this);
   StampTool* stampTool =
       dynamic_cast<StampTool*>(MyParams::instance()->getTool(Tool_Stamp));
+  int currentStampId = stampTool->stampId();
   for (int stampId = 0; stampId < stampTool->stampCount(); stampId++) {
     QPair<QString, QPixmap> sInfo = stampTool->getStampInfo(stampId);
     QAction* sTypeAction =
         stampMenu->addAction(QIcon(sInfo.second), sInfo.first);
     sTypeAction->setCheckable(true);
-    if (stampId == 0) sTypeAction->setChecked(true);
+    if (stampId == currentStampId) sTypeAction->setChecked(true);
     sTypeAction->setData(stampId);
     stampTypeGroup->addAction(sTypeAction);
   }
@@ -279,6 +307,7 @@ MyWindow::MyWindow()
       toolBar->addAction(QIcon(":Resources/ae.svg"),
                          tr("Copy After Effects Keyframe Data To Clipboard"));
   aeToolAct->setCheckable(true);
+  if (currentToolId == Tool_AE) aeToolAct->setChecked(true);
   aeToolAct->setData(Tool_AE);
   m_toolActionGroup->addAction(aeToolAct);
 
@@ -932,6 +961,7 @@ void MyWindow::closeEvent(QCloseEvent* event) {
   if (askAndSaveChanges()) {
     QMainWindow::closeEvent(event);
     MyParams::instance()->saveUserSettings();
+    MyParams::instance()->saveWindowGeometry(geometry());
   } else
     event->ignore();
 }

@@ -113,10 +113,11 @@ void MyParams::initialize() {
     }
   }
 
-  loadUserSettingsIfExists();
   // マイスタンプの登録ここでやる
   registerDefaultStamps();
   loadUserStamps();
+
+  loadUserSettingsIfExists();
 
   QPixmap pm(5, 5);
   pm.fill(Qt::transparent);
@@ -485,6 +486,18 @@ bool MyParams::loadUserSettingsIfExists() {
   m_emptyFrameForAE =
       settings.value("EmptyFrameForAE", m_emptyFrameForAE).toInt();
   settings.endGroup();
+
+  settings.beginGroup("UserEnvironment");
+  // restore user environment
+  ToolId toolId =
+      (ToolId)settings.value("CurrentToolId", (int)m_currentToolId).toInt();
+  setCurrentTool(toolId);
+  m_currentColor.setNamedColor(
+      settings.value("CurrentColor", m_currentColor.name()).toString());
+  m_fitToWindow = settings.value("FitToWindow", m_fitToWindow).toBool();
+  for (auto tool : m_tools.values()) tool->loadToolState(settings);
+  settings.endGroup();
+
   return true;
 }
 
@@ -580,6 +593,30 @@ void MyParams::saveUserSettings() {
   settings.setValue("ApprovalName", m_approvalName);
   settings.setValue("EmptyFrameForAE", m_emptyFrameForAE);
   settings.endGroup();
+
+  // user environment
+  settings.beginGroup("UserEnvironment");
+  settings.setValue("CurrentToolId", (int)m_currentToolId);
+  settings.setValue("CurrentColor", m_currentColor.name());
+  settings.setValue("FitToWindow", (int)m_fitToWindow);
+  for (auto tool : m_tools.values()) tool->saveToolState(settings);
+  settings.endGroup();
+}
+
+void MyParams::saveWindowGeometry(const QRect geometry) {
+  QSettings settings(PathUtils::getUserSettingsPath(), QSettings::IniFormat);
+  settings.beginGroup("UserEnvironment");
+  settings.setValue("WindowGeometry", geometry);
+  settings.endGroup();
+}
+
+QRect MyParams::loadWindowGeometry() const {
+  if (!QFileInfo(PathUtils::getUserSettingsPath()).exists()) return QRect();
+  QSettings settings(PathUtils::getUserSettingsPath(), QSettings::IniFormat);
+  settings.beginGroup("UserEnvironment");
+  QRect ret = settings.value("WindowGeometry", QRect()).toRect();
+  settings.endGroup();
+  return ret;
 }
 
 void MyParams::setCurrentTool(ToolId id) {

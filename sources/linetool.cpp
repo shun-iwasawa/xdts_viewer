@@ -1,6 +1,8 @@
 #include "tool.h"
 #include "xsheetpreviewarea.h"
 
+#include <QSettings>
+
 LineTool::LineTool() : Tool(Tool_Line), m_lineId(ThinLine) {}
 
 void LineTool::onPress(const QPointF& pos, Qt::KeyboardModifiers modifiers) {
@@ -50,6 +52,14 @@ void LineTool::draw(QPainter& p, QPointF pos, double scaleFactor) {
   if (m_dragStartPos.isNull()) return;
   doDrawLine(p);
   p.restore();
+}
+
+void LineTool::saveToolState(QSettings& settings) {
+  settings.setValue("LineTool_Type", (int)m_lineId);
+}
+
+void LineTool::loadToolState(QSettings& settings) {
+  m_lineId = (LineId)settings.value("LineTool_Type", (int)m_lineId).toInt();
 }
 
 void LineTool::doDrawLine(QPainter& p) {

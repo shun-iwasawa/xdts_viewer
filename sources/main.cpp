@@ -47,6 +47,10 @@ int main(int argc, char* argv[]) {
     MyParams::instance()->setCurrentXdtsPath(initialPath);
   }
   MyWindow w;
+
+  QRect geometry = MyParams::instance()->loadWindowGeometry();
+  if (!geometry.isNull()) w.setGeometry(geometry);
+
   w.show();
   w.initialize();
   int ret = a.exec();

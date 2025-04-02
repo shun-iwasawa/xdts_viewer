@@ -341,28 +341,38 @@ MyWindow::MyWindow()
   setCentralWidget(central);
 
   // ƒRƒ}ƒ“ƒh‚Ì“o˜^
-  QAction* cutCmd    = new QAction(tr("Cut"));
-  QAction* copyCmd   = new QAction(tr("Copy"));
-  QAction* pasteCmd  = new QAction(tr("Paste"));
-  QAction* deleteCmd = new QAction(tr("Delete"));
+  QAction* cutCmd      = new QAction(tr("Cut"));
+  QAction* copyCmd     = new QAction(tr("Copy"));
+  QAction* pasteCmd    = new QAction(tr("Paste"));
+  QAction* deleteCmd   = new QAction(tr("Delete"));
+  QAction* prevPageCmd = new QAction(tr("Previous Page"));
+  QAction* nextPageCmd = new QAction(tr("Next Page"));
   CommandManager::instance()->registerAction(Cmd_Cut, cutCmd);
   CommandManager::instance()->registerAction(Cmd_Copy, copyCmd);
   CommandManager::instance()->registerAction(Cmd_Paste, pasteCmd);
   CommandManager::instance()->registerAction(Cmd_Delete, deleteCmd);
+  CommandManager::instance()->registerAction(Cmd_PrevPage, prevPageCmd);
+  CommandManager::instance()->registerAction(Cmd_NextPage, nextPageCmd);
   cutCmd->setShortcut(QKeySequence(QKeySequence::Cut));
   copyCmd->setShortcut(QKeySequence(QKeySequence::Copy));
   pasteCmd->setShortcut(QKeySequence(QKeySequence::Paste));
   deleteCmd->setShortcut(QKeySequence(QKeySequence::Delete));
+  prevPageCmd->setShortcut(QKeySequence(QKeySequence::MoveToPreviousPage));
+  nextPageCmd->setShortcut(QKeySequence(QKeySequence::MoveToNextPage));
   addAction(cutCmd);
   addAction(copyCmd);
   addAction(pasteCmd);
   addAction(deleteCmd);
+  addAction(prevPageCmd);
+  addAction(nextPageCmd);
 
   // signal-slot connections
   connect(m_currentPageEdit, SIGNAL(editingFinished()), this,
           SLOT(updatePreview()));
   connect(m_prev, SIGNAL(clicked(bool)), this, SLOT(onPrev()));
   connect(m_next, SIGNAL(clicked(bool)), this, SLOT(onNext()));
+  connect(prevPageCmd, SIGNAL(triggered()), this, SLOT(onPrev()));
+  connect(nextPageCmd, SIGNAL(triggered()), this, SLOT(onNext()));
 
   connect(MyParams::instance(), SIGNAL(templateSwitched()), this,
           SLOT(initTemplate()));
@@ -669,6 +679,7 @@ public:
 };
 
 void MyWindow::onPrev() {
+  if (!m_prev->isEnabled()) return;
   int current = m_currentPageEdit->text().toInt();
   assert(current > 0);
 
@@ -677,6 +688,7 @@ void MyWindow::onPrev() {
 }
 
 void MyWindow::onNext() {
+  if (!m_next->isEnabled()) return;
   int current = m_currentPageEdit->text().toInt();
   assert(current < m_totalPageCount);
 

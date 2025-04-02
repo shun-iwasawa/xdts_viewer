@@ -24,6 +24,7 @@ set(HEADERS
 set(SOURCES
     main.cpp
     mywindow.cpp
+    mywindow_psdexport.cpp
     xdtsio.cpp
     xsheetpreviewarea.cpp
     myparams.cpp
@@ -56,6 +57,10 @@ endif()
 option(WITH_TRANSLATION "Generate translation projects as well" ON)
 
 #-----------------------------------------------------------------------------
+# Third Party & System Libs
+get_filename_component(SDKROOT ../thirdparty/ ABSOLUTE)
+message(STATUS "SDK Root:" ${SDKROOT})
+
 # Third Party & System Libs
 # specify qtdir
 if(BUILD_ENV_MSVC)
@@ -134,6 +139,11 @@ endif()
 
 
 
+if(BUILD_ENV_MSVC)
+    include_directories( ${SDKROOT}/psd_sdk/include )
+    set(PSD_SDK_LIB ${SDKROOT}/psd_sdk/lib/Psd.lib)
+endif()
+
 # 生成する実行ファイルを追加する
 if(BUILD_ENV_MSVC)
     add_executable(${PROJECT_NAME} WIN32 ${HEADERS} ${SOURCES} ${RESOURCES} ${RC_FILE})
@@ -144,7 +154,11 @@ if(BUILD_ENV_MSVC)
 endif()
 
 # link Qt library. Core and Gui will be linked accordingly
-target_link_libraries(${PROJECT_NAME} Qt5::Widgets)
+if(BUILD_ENV_MSVC)
+    target_link_libraries(${PROJECT_NAME} Qt5::Widgets ${PSD_SDK_LIB} )
+else()
+    target_link_libraries(${PROJECT_NAME} Qt5::Widgets)
+endif()
 
 add_definitions(
     -DNOMINMAX

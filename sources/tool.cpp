@@ -3,6 +3,7 @@
 #include "xsheetpreviewarea.h"
 
 #include <QUndoCommand>
+#include <QSettings>
 
 Tool::Tool(ToolId id) : m_view(nullptr) {
   MyParams::instance()->registerTool(id, this);
@@ -112,6 +113,18 @@ void BrushTool::onEnter() {
   m_view->setCursor(MyParams::instance()->getBrushToolCursor());
 }
 
+void BrushTool::saveToolState(QSettings& settings) {
+  settings.setValue("BrushTool_Size", m_brushSize);
+}
+
+void BrushTool::loadToolState(QSettings& settings) {
+  m_brushSize = settings.value("BrushTool_Size", m_brushSize).toDouble();
+}
+
+BrushTool::BrushSize BrushTool::brushSizeId() {
+  return (m_brushSize == 30.) ? Large : Small;
+}
+
 //---------------------------------------
 EraserTool::EraserTool() : Tool(Tool_Eraser) {}
 
@@ -197,6 +210,15 @@ void StampTool::draw(QPainter& painter, QPointF pos, double scaleFactor) {
   painter.drawPixmap(pos.x() - scaledStampPixmap.width() / 2,
                      pos.y() - scaledStampPixmap.height() / 2,
                      scaledStampPixmap);
+}
+
+void StampTool::saveToolState(QSettings& settings) {
+  settings.setValue("StampTool_Id", m_stampId);
+}
+
+void StampTool::loadToolState(QSettings& settings) {
+  int id = settings.value("StampTool_Id", m_stampId).toInt();
+  if (id < stampCount()) m_stampId = id;
 }
 
 void StampTool::registerStamp(const QString name, const QPixmap pm) {

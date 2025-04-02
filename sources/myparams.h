@@ -280,6 +280,8 @@ public:
   void saveFormatSettings();
   bool loadUserSettingsIfExists();
   void saveUserSettings();
+  void saveWindowGeometry(const QRect geometry);
+  QRect loadWindowGeometry() const;
 
   void registerDefaultStamps();
   void loadUserStamps();

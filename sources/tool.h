@@ -14,6 +14,7 @@
 class XsheetPdfPreviewPane;
 class QMenu;
 class QKeyEvent;
+class QSettings;
 
 class Tool : public QObject {
 protected:
@@ -35,6 +36,8 @@ public:
   virtual void addContextMenu(QMenu* menu) {}
   virtual void onEnter() {}
   virtual void onKeyPress(QKeyEvent*) {}
+  virtual void saveToolState(QSettings& settings) {};
+  virtual void loadToolState(QSettings& settings) {};
 };
 
 class BrushUndo : public QUndoCommand {
@@ -71,6 +74,10 @@ public:
   bool onActivate() override;
   void setSize(BrushSize sizeId);
   void onEnter() override;
+
+  void saveToolState(QSettings& settings) override;
+  void loadToolState(QSettings& settings) override;
+  BrushSize brushSizeId();
 };
 
 class EraserTool : public Tool {
@@ -139,6 +146,8 @@ public:
                  const QPointF& canvasPos) override;
   void draw(QPainter& painter, QPointF pos, double scaleFactor) override;
   void addContextMenu(QMenu* menu) override;
+  void saveToolState(QSettings& settings) override;
+  void loadToolState(QSettings& settings) override;
 
   void select(const QRect& selectedRect, const QRect& currentRect);
   void select(const QPainterPath& path);
@@ -148,6 +157,7 @@ public:
                   bool smoothing = false);
   void clearImage(const QPainterPath&);
   void setMode(SelectionMode mode) { m_mode = mode; }
+  SelectionMode mode() const { return m_mode; }
 
   void onCut();
   void onCopy();
@@ -173,11 +183,14 @@ public:
   StampTool();
   void onPress(const QPointF& pos, Qt::KeyboardModifiers modifiers) override;
   void draw(QPainter& painter, QPointF pos, double scaleFactor) override;
+  void saveToolState(QSettings& settings) override;
+  void loadToolState(QSettings& settings) override;
   void registerStamp(const QString name, const QPixmap pm);
   void setStampId(int id) {
     m_stampId   = id;
     m_validFlag = false;
   }
+  int stampId() const { return m_stampId; }
   QPixmap& prepareScaledStamp(double scaleFactor);
 
   QPair<QString, QPixmap> getStampInfo(int id) const {
@@ -212,6 +225,9 @@ public:
   void onRelease(const QPointF& pos, QImage& canvasImg,
                  const QPointF& canvasPos) override;
   void draw(QPainter& painter, QPointF pos, double scaleFactor) override;
+  void saveToolState(QSettings& settings) override;
+  void loadToolState(QSettings& settings) override;
   void setType(LineId id) { m_lineId = id; }
+  LineId type() const { return m_lineId; }
 };
 #endif

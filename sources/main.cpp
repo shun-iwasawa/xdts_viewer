@@ -18,7 +18,7 @@ int main(int argc, char* argv[]) {
   QGuiApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
   QApplication a(argc, argv);
   a.setApplicationName("XDTS Viewer");
-  a.setApplicationVersion("1.1.0");
+  a.setApplicationVersion("1.2.0");
 
   // Compress tablet events with application attributes instead of implementing
   // the delay-timer by ourselves

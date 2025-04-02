@@ -47,6 +47,8 @@ class MyParams : public QObject  // singleton
 
   QMap<QString, QString> m_templatesMap;
 
+  QString m_createdVersion;
+
   // format settings
   QString m_templateName;
   ExportArea m_exportArea;
@@ -129,6 +131,8 @@ public:
 
   // to be called just after instancing the application
   void initialize();
+
+  QString createdVersion() const { return m_createdVersion; }
 
   void setTemplateName(const QString& val) { m_templateName = val; }
   QString templateName() const { return m_templateName; }

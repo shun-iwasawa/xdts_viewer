@@ -18,6 +18,13 @@ namespace {
 const QString configFileName         = "config.ini";
 const QStringList exportAreaNameList = {"Actions", "Cells"};
 
+// 1.2.3 -> 10203  1.10.0 -> 11000
+int VersionValue(QString versionStr) {
+  QStringList vList = versionStr.split(".");
+  assert(vList.count == 3);
+  return vList[0].toInt() * 10000 + vList[1].toInt() * 100 + vList[2].toInt();
+}
+
 QString pageNumber2Name(int page, int parallelPageCount) {
   if (parallelPageCount == 1 || page == 0) return QString::number(page);
 
@@ -26,7 +33,14 @@ QString pageNumber2Name(int page, int parallelPageCount) {
 
   char alphabet = 'A' + pPage;
 
-  return QString::number(fPage) + QString(alphabet);
+  // starting from V1.2.0, change page number to be started from 1
+  // [V1.1.0 AND OLDER] 0(backside), 0A, 0B, 1A, 1B,...
+  // [V1.2.0 AND NEWER] 0(backside), 1A, 1B, 2A, 2B,...
+  if (VersionValue(MyParams::instance()->createdVersion()) >=
+      VersionValue("1.2.0"))
+    return QString::number(fPage + 1) + QString(alphabet);
+  else  // to keep compatibility with older versions
+    return QString::number(fPage) + QString(alphabet);
 }
 
 }  // namespace
@@ -34,7 +48,8 @@ QString pageNumber2Name(int page, int parallelPageCount) {
 //-----------------------------------------------------------------------------
 
 MyParams::MyParams()
-    : m_templateName("B4 size, 6 seconds sheet")
+    : m_createdVersion(qApp->applicationVersion())
+    , m_templateName("B4 size, 6 seconds sheet")
     , m_exportArea(Area_Cells)
     , m_logoPath()
     , m_skippedLevelNames()
@@ -207,8 +222,9 @@ void MyParams::setScribbleImage(int page, const QImage& image) {
   m_scribbleImages.insert(page, image);
 }
 void MyParams::resetValues() {
-  m_templateName  = "B4 size, 6 seconds sheet";
-  m_expandColumns = true;
+  m_createdVersion = qApp->applicationVersion();
+  m_templateName   = "B4 size, 6 seconds sheet";
+  m_expandColumns  = true;
   if (!isAreaSpecified()) m_exportArea = Area_Cells;
   m_logoPath                  = "";
   m_withDenpyo                = false;
@@ -350,6 +366,8 @@ bool MyParams::loadFormatSettingsIfExists() {
 
   QSettings settings(getImageFolderPath() + "/" + configFileName,
                      QSettings::IniFormat);
+  m_createdVersion = settings.value("Version", m_createdVersion).toString();
+
   settings.beginGroup("FormatSettings");
   m_templateName  = settings.value("TemplateName", m_templateName).toString();
   m_expandColumns = settings.value("ExpandColumns", m_expandColumns).toBool();
@@ -411,7 +429,7 @@ bool MyParams::loadFormatSettingsIfExists() {
 void MyParams::saveFormatSettings() {
   QSettings settings(getImageFolderPath() + "/" + configFileName,
                      QSettings::IniFormat);
-  settings.setValue("Version", qApp->applicationVersion());
+  settings.setValue("Version", m_createdVersion);
   settings.beginGroup("FormatSettings");
   settings.setValue("TemplateName", m_templateName);
   settings.setValue("ExpandColumns", m_expandColumns);

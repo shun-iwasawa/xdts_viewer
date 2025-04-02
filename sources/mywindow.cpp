@@ -1098,7 +1098,7 @@ void MyWindow::onExport() {
 
       pm.save(tmpFile);
 
-      if (fpage == 0) {
+      if (fpage == -1) {
         currentPage++;
         break;
       }

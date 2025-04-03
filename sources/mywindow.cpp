@@ -100,8 +100,13 @@ MyWindow::MyWindow()
       toolBar->addAction(QIcon(":Resources/load.svg"), tr("Load (Ctrl+O)"));
   QAction* saveAct =
       toolBar->addAction(QIcon(":Resources/save.svg"), tr("Save (Ctrl+S)"));
+#ifdef WIN32
+  QAction* exportAct = toolBar->addAction(QIcon(":Resources/export_img.svg"),
+                                          tr("Export Image (Ctrl+E)"));
+#else
   QAction* exportAct = toolBar->addAction(QIcon(":Resources/export.svg"),
                                           tr("Export Image (Ctrl+E)"));
+#endif
   toolBar->addSeparator();
   QAction* undoAct =
       toolBar->addAction(QIcon(":Resources/undo.svg"), tr("Undo (Ctrl+Z)"));
@@ -1037,9 +1042,23 @@ void MyWindow::onExport() {
                                          m_previewPane->scribbleImage());
   // ファイルパス取得
   QString defaultPath = MyParams::instance()->getImageFolderPath() + ".png";
-  QString fileName    = QFileDialog::getSaveFileName(
+#ifdef WIN32
+  QString fileName =
+      QFileDialog::getSaveFileName(this, tr("Export Images"), defaultPath,
+                                   tr("PNG (*.png);;PSD files (*.psd)"));
+#else
+  QString fileName = QFileDialog::getSaveFileName(
       this, tr("Export Images"), defaultPath, tr("PNG (*.png)"));
+#endif
+
   if (fileName.isEmpty()) return;
+
+#ifdef WIN32
+  if (fileName.endsWith(".psd")) {
+    onExportPSD(fileName);
+    return;
+  }
+#endif
 
   if (fileName.endsWith(".png")) fileName.chop(4);
 

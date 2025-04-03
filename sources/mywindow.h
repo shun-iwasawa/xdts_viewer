@@ -82,6 +82,9 @@ protected slots:
   void updateTitleBar();
   void onSave();
   void onExport();
+#ifdef WIN32
+  void onExportPSD(QString fileName);
+#endif
   void onCut();
   void onCopy();
   void onPaste();

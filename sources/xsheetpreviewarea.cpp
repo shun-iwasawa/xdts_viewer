@@ -1608,6 +1608,8 @@ void XSheetPDFTemplate::drawXsheetContents(QPainter& painter, int framePage,
 
       //  1ページ目であれば-1を返す。2ぺージ目以降の場合、前のフレームにさかのぼって継続線の開始フレームを探す
       int continuousLineStartFrame = checkPrevContinuous(cells, startFrame);
+      if (continuousLineStartFrame != -1)
+        prevCell = cells[continuousLineStartFrame];
 
       r                  = 0;
       int topColumnIndex = c, prevColumnIndex = occupiedColumns[c][0];

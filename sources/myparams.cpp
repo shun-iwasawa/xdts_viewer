@@ -21,7 +21,7 @@ const QStringList exportAreaNameList = {"Actions", "Cells"};
 // 1.2.3 -> 10203  1.10.0 -> 11000
 int VersionValue(QString versionStr) {
   QStringList vList = versionStr.split(".");
-  assert(vList.count == 3);
+  assert(vList.count() == 3);
   return vList[0].toInt() * 10000 + vList[1].toInt() * 100 + vList[2].toInt();
 }
 

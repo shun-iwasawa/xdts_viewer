@@ -281,6 +281,12 @@ public:
   }
 
   int framePerPage() { return param(XSheetPDFTemplateParamIDs::FrameLength); }
+  int keyColumnAmountTmpl() {
+    return m_params.value(XSheetPDFTemplateParamIDs::KeyColAmount);
+  }
+  int cellsColumnAmountTmpl() {
+    return m_params.value(XSheetPDFTemplateParamIDs::CellsColAmount);
+  }
 };
 
 class XSheetPDFTemplate_B4_6sec : public XSheetPDFTemplate {

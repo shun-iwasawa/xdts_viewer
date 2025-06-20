@@ -80,7 +80,8 @@ MyParams::MyParams()
     , m_backsideImgPath()
     , m_backsideImgPathWithDenpyo()
     , m_isScannedGengaSheet(false)
-    , m_dougaColumnOffset(0)
+    , m_dougaColumnOffset(-1)  // deprecated
+    , m_gengaLevelsCount(GengaLevelsCount_Auto)
     , m_cameraColumnAddition(0)
     , m_scannedSheetPageAmount(1)
     , m_startOverlapFrameLength(0)
@@ -242,7 +243,8 @@ void MyParams::resetValues() {
   m_mixUpColumnsType = Mixup_Auto;
   m_mixUpColumnsKeyframes.clear();
   m_isScannedGengaSheet     = false;
-  m_dougaColumnOffset       = 0;
+  m_dougaColumnOffset       = -1;  // deprecated
+  m_gengaLevelsCount        = GengaLevelsCount_Auto;
   m_cameraColumnAddition    = 0;
   m_scannedSheetPageAmount  = 1;
   m_startOverlapFrameLength = 0;
@@ -275,8 +277,13 @@ void MyParams::resetValues() {
         settings.value("SkippedLevelNames", m_skippedLevelNames).toString();
     m_isScannedGengaSheet =
         settings.value("IsScannedGengaSheet", m_isScannedGengaSheet).toBool();
+
+    // deprecated
     m_dougaColumnOffset =
         settings.value("DougaColumnOffset", m_dougaColumnOffset).toInt();
+    m_gengaLevelsCount =
+        settings.value("GengaLevelsCount", m_gengaLevelsCount).toInt();
+
     m_cameraColumnAddition =
         settings.value("CameraColumnAddition", m_cameraColumnAddition).toInt();
     m_scannedSheetPageAmount =
@@ -405,7 +412,12 @@ bool MyParams::loadFormatSettingsIfExists() {
   m_skippedLevelNames =
       settings.value("SkippedLevelNames", m_skippedLevelNames).toString();
   m_isScannedGengaSheet = settings.value("IsScannedGengaSheet", false).toBool();
-  m_dougaColumnOffset   = settings.value("DougaColumnOffset", 0).toInt();
+
+  // deprecated
+  m_dougaColumnOffset = settings.value("DougaColumnOffset", -1).toInt();
+  m_gengaLevelsCount =
+      settings.value("GengaLevelsCount", GengaLevelsCount_Auto).toInt();
+
   m_cameraColumnAddition = settings.value("CameraColumnAddition", 0).toInt();
   m_scannedSheetPageAmount =
       settings.value("ScannedSheetPageAmount", 1).toInt();
@@ -487,7 +499,13 @@ void MyParams::saveFormatSettings() {
   settings.setValue("BacksideImgPathWithDenpyo", m_backsideImgPathWithDenpyo);
   settings.setValue("SkippedLevelNames", m_skippedLevelNames);
   settings.setValue("IsScannedGengaSheet", m_isScannedGengaSheet);
-  settings.setValue("DougaColumnOffset", m_dougaColumnOffset);
+
+  // deprecated
+  // settings.setValue("DougaColumnOffset", m_dougaColumnOffset);
+  if (settings.contains("DougaColumnOffset"))
+    settings.remove("DougaColumnOffset");
+  settings.setValue("GengaLevelsCount", m_gengaLevelsCount);
+
   settings.setValue("CameraColumnAddition", m_cameraColumnAddition);
   settings.setValue("ScannedSheetPageAmount", m_scannedSheetPageAmount);
   settings.setValue("StartOverlapFrameLength", m_startOverlapFrameLength);
@@ -677,6 +695,17 @@ QRect MyParams::loadWindowGeometry() const {
   return ret;
 }
 
+void MyParams::convertCompatibleParameters() {
+  // loadFormatSettingsIfExists → テンプレート読み込み後、
+  // m_dougaColumnOffsetが0より大きい値のとき、m_gengaLevelsCountを
+  // テンプレートの原画欄の列数にm_dougaColumnOffsetを足した値にする
+  if (m_dougaColumnOffset > 0) {
+    assert(m_gengaLevelsCount = GengaLevelsCount_Auto);
+    XSheetPDFTemplate* tmpl = currentTemplate();
+    m_gengaLevelsCount      = tmpl->keyColumnAmountTmpl() + m_dougaColumnOffset;
+  }
+}
+
 void MyParams::setCurrentTool(ToolId id) {
   if (m_currentToolId == id) return;
   ToolId previousToolId = m_currentToolId;
@@ -830,12 +859,20 @@ void MyParams::setCurrentXdtsPath(const QString& path) {
 }
 
 bool MyParams::isAreaSpecified() {
-  return !m_currentXdtsPaths.contains(Area_Unspecified);
+  return !m_currentXdtsPaths.isEmpty() &&
+         !m_currentXdtsPaths.contains(Area_Unspecified);
 }
 
 QString MyParams::logoPath(bool asIs) const {
   if (asIs || !QDir::isRelativePath(m_logoPath)) return m_logoPath;
   return QDir(PathUtils::getResourceDirPath()).absoluteFilePath(m_logoPath);
+}
+
+int MyParams::getGengaLevelsCount() {
+  if (m_gengaLevelsCount != GengaLevelsCount_Auto) return m_gengaLevelsCount;
+  if (!m_currentTmpl) return 0;
+  return std::min(m_currentTmpl->keyColumnAmountTmpl(),
+                  m_currentTmpl->cellsColumnAmountTmpl());
 }
 
 QString MyParams::backsideImgPath(bool asIs) const {

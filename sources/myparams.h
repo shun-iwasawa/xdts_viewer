@@ -45,6 +45,8 @@ typedef QHash<QPair<int, int>, QColor> DyedCellsData;
 
 enum WorkFlowType { Genga = 0, Douga, LO, RoughGen, WorkFlowTypeCount };
 
+const int GengaLevelsCount_Auto = -1;
+
 class MyParams : public QObject  // singleton
 {
   Q_OBJECT
@@ -74,7 +76,11 @@ class MyParams : public QObject  // singleton
 
   bool m_isScannedGengaSheet;  // 原画シートを紙からスキャン
                                // （原画欄の枠線を隠す）
-  int m_dougaColumnOffset;  // 動画列の開始位置（原画シートが紙スキャンの場合）
+
+  int m_dougaColumnOffset;  // Deprecated. Is kept only for compatibility:
+                            // 動画列の開始位置（原画シートが紙スキャンの場合）
+  int m_gengaLevelsCount;   // 原画のセル数
+
   int m_cameraColumnAddition;  // カメラ列の追加分（原画シートが紙スキャンの場合）
   int m_scannedSheetPageAmount;  // 手動で空ページを追加する
 
@@ -192,11 +198,16 @@ public:
   void setIsScannedGengaSheet(bool on) { m_isScannedGengaSheet = on; }
   bool isScannedGengaSheet() { return m_isScannedGengaSheet; }
 
-  void setDougaColumnOffset(int val) { m_dougaColumnOffset = val; }
-  int dougaColumnOffset_Param() { return m_dougaColumnOffset; }
-  int getDougaColumnOffset() {
-    return (m_isScannedGengaSheet) ? m_dougaColumnOffset : 0;
-  }
+  // DEPRECATED
+  // void setDougaColumnOffset(int val) { m_dougaColumnOffset = val; }
+  // int dougaColumnOffset_Param() { return m_dougaColumnOffset; }
+  // int getDougaColumnOffset() {
+  //  return (m_isScannedGengaSheet) ? m_dougaColumnOffset : 0;
+  //}
+  void setGengaLevelsCount(const int val) { m_gengaLevelsCount = val; }
+  int gengaLevelsCount_Param() { return m_gengaLevelsCount; }
+  int getGengaLevelsCount();
+
   void setCameraColumnAddition(int val) { m_cameraColumnAddition = val; }
   int cameraColumnAddition_Param() { return m_cameraColumnAddition; }
   int getCameraColumnAddition() {
@@ -295,6 +306,7 @@ public:
   void saveUserSettings();
   void saveWindowGeometry(const QRect geometry);
   QRect loadWindowGeometry() const;
+  void convertCompatibleParameters();
 
   void registerDefaultStamps();
   void loadUserStamps();

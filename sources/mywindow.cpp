@@ -522,7 +522,7 @@ void MyWindow::setInfo(bool forExportImage) {
 
   if (p->exposeAreas().count() == 1)
     info.exportAreas.append(p->exportArea());
-  else {
+  else if (!p->exposeAreas().isEmpty()) {
     info.exportAreas.append(Area_Actions);
     info.exportAreas.append(Area_Cells);
   }
@@ -938,6 +938,8 @@ void MyWindow::onLoad(const QString& xdtsPath) {
   bool settingExists = MyParams::instance()->loadFormatSettingsIfExists();
 
   initTemplate();
+
+  MyParams::instance()->convertCompatibleParameters();
 
   m_settingsDialog->syncUIs();
   m_preferencesDialog->syncUIs();

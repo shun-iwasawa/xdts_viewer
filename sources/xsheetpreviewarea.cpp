@@ -1351,11 +1351,20 @@ int XSheetPDFTemplate::param(const std::string& id, int defaultValue) {
     if (id == KeyColAmount && (m_info.exportAreas.contains(Area_Actions) ||
                                MyParams::instance()->isAreaSpecified())) {
       return std::max(colsInScene, m_params.value(id, defaultValue));
-    } else if (id == CellsColAmount &&
-               (m_info.exportAreas.contains(Area_Cells) ||
-                MyParams::instance()->isAreaSpecified())) {
-      colsInScene -= param(ExtraCellsColAmount, 0);
-      return std::max(colsInScene, m_params.value(id, defaultValue));
+    } else if (id == CellsColAmount) {
+      // 紙原画のスキャンを持ち込んでいるとき、Cell欄がAction欄と同じ列数になるように拡張する
+      if (MyParams::instance()->isScannedGengaSheet()) {
+        int gengaLevelsCount =
+            MyParams::instance()
+                ->gengaLevelsCount_Param();  // Autoの場合、-1が返るので考慮されない
+        return std::max(
+            colsInScene,
+            std::max(gengaLevelsCount, m_params.value(id, defaultValue)));
+      } else if (m_info.exportAreas.contains(Area_Cells) ||
+                 MyParams::instance()->isAreaSpecified()) {
+        colsInScene -= param(ExtraCellsColAmount, 0);
+        return std::max(colsInScene, m_params.value(id, defaultValue));
+      }
     } else if (id == BodyWidth) {
       int width = m_params.value(BodyWidth, defaultValue);
       // Actions area
@@ -1365,8 +1374,13 @@ int XSheetPDFTemplate::param(const std::string& id, int defaultValue) {
         if (exColAmount > 0) width += exColAmount * param(KeyColWidth);
       }
       // Cells area
-      if (m_info.exportAreas.contains(Area_Cells) ||
-          MyParams::instance()->isAreaSpecified()) {
+      // 紙原画のスキャンを持ち込んでいるとき、Cell欄がAction欄に合わせて増えているかもしれない
+      if (MyParams::instance()->isScannedGengaSheet()) {
+        int exColAmount =
+            param(CellsColAmount) - m_params.value(CellsColAmount);
+        if (exColAmount > 0) width += exColAmount * param(CellsColWidth);
+      } else if (m_info.exportAreas.contains(Area_Cells) ||
+                 MyParams::instance()->isAreaSpecified()) {
         int exColAmount = colsInScene - param(ExtraCellsColAmount, 0) -
                           m_params.value(CellsColAmount);
         if (exColAmount > 0) width += exColAmount * param(CellsColWidth);
@@ -1483,8 +1497,12 @@ void XSheetPDFTemplate::setInfo(const XSheetPDFFormatInfo& info) {
   m_p.infoHeaderHeight        = param(InfoTitleHeight) + param(InfoBodyHeight);
   m_p.bodylabelTextSize_Large = param(HeaderHeight) - mm2px(4);
   m_p.bodylabelTextSize_Small = param(HeaderHeight) / 2 - mm2px(1);
+
+  int gengaLevelsCount = MyParams::instance()->getGengaLevelsCount();
   m_p.cellColumnOffset =
-      param(CellsColWidth) * MyParams::instance()->getDougaColumnOffset();
+      (gengaLevelsCount > param(KeyColAmount))
+          ? param(CellsColWidth) * (gengaLevelsCount - param(KeyColAmount))
+          : 0;
   // not using CameraColWidth, because the camera column overflows to the cell
   // area
   m_p.cameraColumnAdditionWidth =
@@ -1617,7 +1635,7 @@ void XSheetPDFTemplate::drawXsheetContents(QPainter& painter, int framePage,
           m_repeatColumns.value(area, QMap<int, QList<RepeatInfo>>());
 
     // コマの動画番号に色を付ける
-    DyedCellsData dyedCells = MyParams::instance()->dyedCells(area);
+    DyedCellsData dyedCells = MyParams::instance()->dyedCells(dispArea);
 
     int c = 0, r;
     for (int colId = startColId; c < colsInPage; c++, colId++) {
@@ -1671,10 +1689,11 @@ void XSheetPDFTemplate::drawXsheetContents(QPainter& painter, int framePage,
         FrameData cell = cells.at(f);
 
         // 動画番号に着色する
-        if (dyedCells.contains({oc + startColId, f}))
-          painter.setPen(QPen(dyedCells.value({oc + startColId, f}),
-                              painter.pen().widthF()));
-        else
+        if (dyedCells.contains({oc + startColId, f})) {
+          QColor color = dyedCells.value({oc + startColId, f});
+          if (color == QColor(Qt::white)) color = QColor(Qt::transparent);
+          painter.setPen(QPen(color, painter.pen().widthF()));
+        } else
           painter.setPen(QPen(Qt::black, painter.pen().widthF()));
 
         // repeat line

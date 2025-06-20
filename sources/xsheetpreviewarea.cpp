@@ -354,6 +354,14 @@ void frame2SecKoma(int frame, int& sec, int& koma) {
 }
 int secKoma2Frame(int sec, int koma) { return sec * 24 + koma; }
 
+// 空でなく、中割記号でもない場合にtrueを返す
+inline bool isNotEmptyOrSymbol(const QString& frame) {
+  return !frame.isEmpty() && frame != XdtsFrameDataItem::SYMBOL_TICK_1 &&
+         frame != XdtsFrameDataItem::SYMBOL_TICK_2 &&
+         frame != XdtsFrameDataItem::SYMBOL_NULL_CELL &&
+         frame != XdtsFrameDataItem::SYMBOL_HYPHEN;
+}
+
 }  // namespace
 //---------------------------------------------------------
 
@@ -2260,7 +2268,7 @@ void XSheetPDFTemplate::checkRepeatColumns() {
           int chunkLength  = fm - fn + 1;
 
           // このチャンクが繰り返しになっているかをチェックする
-          // リピート明けのコマはなにか番号が打たれている必要があるので、
+          // リピート明けのコマはなにか番号が打たれている必要がある（中割記号でもダメ）ので、
           // 繰り返しを満たし最後に番号が打たれているフレームを記憶する
           int fl_lastNumbered = fm + 1;
           // チャンク以降のフレーム
@@ -2272,7 +2280,8 @@ void XSheetPDFTemplate::checkRepeatColumns() {
               // flが最後のフレームでない場合、continueしてflを進める
               if (fl < dumpCells.count() - 1) {
                 // 番号が打たれている場合、fl_lastNumberedを更新
-                if (!data[cId].cells[fl].frame.isEmpty()) fl_lastNumbered = fl;
+                if (isNotEmptyOrSymbol(data[cId].cells[fl].frame))
+                  fl_lastNumbered = fl;
                 continue;
               }
               // 最後のフレームに達していたら、リピート終わりのフレームは
@@ -2282,7 +2291,8 @@ void XSheetPDFTemplate::checkRepeatColumns() {
             }
             // 一致していない場合、なにか番号が打たれているかを確認
             else {
-              if (!data[cId].cells[fl].frame.isEmpty()) fl_lastNumbered = fl;
+              if (isNotEmptyOrSymbol(data[cId].cells[fl].frame))
+                fl_lastNumbered = fl;
             }
             // 繰り返しを満たし最後に番号が打たれているフレーム fl_lastNumbered
             // を リピート明けのフレームとし、

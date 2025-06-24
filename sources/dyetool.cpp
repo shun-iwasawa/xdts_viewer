@@ -36,7 +36,7 @@ void DyeUndo::undo() {
             .insert(pos, data.value(pos));
     }
   }
-  MyParams::instance()->notifyTemplateSwitched();
+  MyParams::instance()->notifySomethingChanged();
   MyParams::instance()->setFormatDirty(true);
 }
 
@@ -56,7 +56,7 @@ void DyeUndo::redo() {
             .insert(pos, data.value(pos));
     }
   }
-  MyParams::instance()->notifyTemplateSwitched();
+  MyParams::instance()->notifySomethingChanged();
   MyParams::instance()->setFormatDirty(true);
 }
 
@@ -174,7 +174,7 @@ void DyeTool::onRelease(const QPointF& pos, QImage& canvasImg,
   MyParams::instance()->undoStack()->push(m_undo);
 
   m_undo = nullptr;
-  MyParams::instance()->notifyTemplateSwitched();
+  MyParams::instance()->notifySomethingChanged();
   MyParams::instance()->setFormatDirty(true);
 }
 
@@ -216,27 +216,29 @@ void DyeTool::draw(QPainter& painter, QPointF pos, double scaleFactor) {
     // 薄く現在の文字色を塗る。基本は黒
     for (auto bodybbox : bodyBBoxes) pmp.fillRect(bodybbox, Qt::black);
 
-    // 現在のセル色情報を反映する
-    DyedCellsData dyedCells = MyParams::instance()->dyedCells((ExportArea)area);
     QList<QList<QRect>> cellRects = tmpl->cellRects((ExportArea)area);
+    if (!cellRects.isEmpty()) {
+      // 現在のセル色情報を反映する
+      DyedCellsData dyedCells =
+          MyParams::instance()->dyedCells((ExportArea)area);
+      for (auto key : dyedCells.keys()) {
+        // keyが現在のページに含まれているかチェック
+        if (startColId <= key.first && key.first < endColId &&
+            startFrame <= key.second && key.second < endFrame) {
+          int c = key.first - startColId;
+          int r = key.second - startFrame;
 
-    for (auto key : dyedCells.keys()) {
-      // keyが現在のページに含まれているかチェック
-      if (startColId <= key.first && key.first < endColId &&
-          startFrame <= key.second && key.second < endFrame) {
-        int c = key.first - startColId;
-        int r = key.second - startFrame;
-
-        QColor color = dyedCells.value(key);
-        pmp.fillRect(cellRects[c][r], color);
+          QColor color = dyedCells.value(key);
+          pmp.fillRect(cellRects[c][r], color);
+        }
       }
-    }
 
-    // カーソルのセル
-    if (m_currentCell.first == (ExportArea)area) {
-      pmp.fillRect(
-          cellRects[m_currentCell.second.x()][m_currentCell.second.y()],
-          MyParams::instance()->currentColor());
+      // カーソルのセル
+      if (m_currentCell.first == (ExportArea)area) {
+        pmp.fillRect(
+            cellRects[m_currentCell.second.x()][m_currentCell.second.y()],
+            MyParams::instance()->currentColor());
+      }
     }
   }
   painter.setOpacity(0.3);

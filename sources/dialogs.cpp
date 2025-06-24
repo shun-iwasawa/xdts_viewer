@@ -52,7 +52,8 @@ SettingsDialog::SettingsDialog(QWidget* parent)
   m_backsideImgPathField = new QLineEdit(this);
   m_scannedGengaSheetGB  = new QGroupBox(
       tr("Scanned Genga Sheet Mode ( Hide Genga && Camera Area Lines )"));
-  m_dougaColumnOffsetEdit           = new QLineEdit(this);
+  m_gengaLevelsCountEdit = new QLineEdit(this);
+  // m_dougaColumnOffsetEdit           = new QLineEdit(this);// deprecated
   m_cameraColumnAdditionEdit        = new QLineEdit(this);
   m_scannedSheetPageAmountEdit      = new QLineEdit(this);
   QPushButton* backsideBrowseButton = new QPushButton("...", this);
@@ -84,8 +85,8 @@ SettingsDialog::SettingsDialog(QWidget* parent)
   m_scannedGengaSheetGB->setCheckable(true);
   QIntValidator* validator = new QIntValidator();
   validator->setBottom(0);
-  m_dougaColumnOffsetEdit->setValidator(validator);
-  m_dougaColumnOffsetEdit->setMaximumWidth(50);
+  m_gengaLevelsCountEdit->setValidator(validator);
+  m_gengaLevelsCountEdit->setMaximumWidth(50);
   m_cameraColumnAdditionEdit->setValidator(validator);
   m_cameraColumnAdditionEdit->setMaximumWidth(50);
   QIntValidator* pagesValidator = new QIntValidator();
@@ -163,9 +164,9 @@ SettingsDialog::SettingsDialog(QWidget* parent)
       scannedGengaLay->setHorizontalSpacing(5);
       scannedGengaLay->setVerticalSpacing(10);
       {
-        scannedGengaLay->addWidget(new QLabel(tr("Douga Column Offset:"), this),
+        scannedGengaLay->addWidget(new QLabel(tr("Genga Levels Count:"), this),
                                    0, 0, Qt::AlignRight | Qt::AlignVCenter);
-        scannedGengaLay->addWidget(m_dougaColumnOffsetEdit, 0, 1,
+        scannedGengaLay->addWidget(m_gengaLevelsCountEdit, 0, 1,
                                    Qt::AlignLeft | Qt::AlignVCenter);
         scannedGengaLay->addItem(new QSpacerItem(10, 1), 0, 2);
         scannedGengaLay->addWidget(new QLabel(tr("Page Amount:"), this), 0, 3,
@@ -241,8 +242,8 @@ SettingsDialog::SettingsDialog(QWidget* parent)
           SLOT(onSkippedLevelNameChanged()));
   connect(m_scannedGengaSheetGB, SIGNAL(clicked(bool)), this,
           SLOT(onFormatSettingsChanged()));
-  connect(m_dougaColumnOffsetEdit, SIGNAL(editingFinished()), this,
-          SLOT(onDougaColumnOffsetEdited()));
+  connect(m_gengaLevelsCountEdit, SIGNAL(editingFinished()), this,
+          SLOT(onGengaLevelsCountEdited()));
   connect(m_cameraColumnAdditionEdit, SIGNAL(editingFinished()), this,
           SLOT(onCameraColumnAdditionEdited()));
   connect(m_scannedSheetPageAmountEdit, SIGNAL(editingFinished()), this,
@@ -277,8 +278,11 @@ void SettingsDialog::syncUIs() {
   m_exportAreaCombo->setDisabled(p->isAreaSpecified());
   m_skippedLevelNamesEdit->setText(p->skippedLevelNames());
   m_scannedGengaSheetGB->setChecked(p->isScannedGengaSheet());
-  m_dougaColumnOffsetEdit->setText(
-      QString::number(p->dougaColumnOffset_Param()));
+
+  m_gengaLevelsCountEdit->setText(QString::number(p->getGengaLevelsCount()));
+  // m_dougaColumnOffsetEdit->setText(
+  //     QString::number(p->dougaColumnOffset_Param()));
+
   m_cameraColumnAdditionEdit->setText(
       QString::number(p->cameraColumnAddition_Param()));
   m_scannedSheetPageAmountEdit->setText(
@@ -325,9 +329,14 @@ void SettingsDialog::openMixupKeyDialog() {
   dialog.exec();
 }
 
-void SettingsDialog::onDougaColumnOffsetEdited() {
-  MyParams::instance()->setDougaColumnOffset(
-      m_dougaColumnOffsetEdit->text().toInt());
+void SettingsDialog::onGengaLevelsCountEdited() {
+  int gengaLevelsCount = m_gengaLevelsCountEdit->text().toInt();
+  int minColumnsAmount = std::min(
+      MyParams::instance()->currentTemplate()->keyColumnAmountTmpl(),
+      MyParams::instance()->currentTemplate()->cellsColumnAmountTmpl());
+  if (gengaLevelsCount == minColumnsAmount)
+    gengaLevelsCount = GengaLevelsCount_Auto;
+  MyParams::instance()->setGengaLevelsCount(gengaLevelsCount);
   MyParams::instance()->notifyTemplateSwitched();
   MyParams::instance()->setFormatDirty(true);
 }

@@ -12,10 +12,7 @@
 #include <QSet>
 #include <QPageSize>
 #include <QPdfWriter>
-#include <QScrollArea>
-#include <QPair>
 #include <QMap>
-#include <QPainter>
 #include <iostream>
 
 #include "myparams.h"
@@ -143,6 +140,8 @@ protected:
   QMap<ExportArea, QList<QList<QRect>>> m_colLabelRects;
   QMap<ExportArea, QList<QList<QRect>>> m_colLabelRects_bottom;
   QMap<ExportArea, QList<QList<QRect>>> m_cellRects;
+  QMap<ExportArea, QList<QRect>> m_bodyBBoxes;
+
   QList<QRect> m_soundCellRects;
   QMap<XSheetPDFDataType, QRect> m_dataRects;
   QList<QRect> m_cameraCellRects;
@@ -263,7 +262,7 @@ public:
 
   QSize getPixelSize();
 
-  // AETool—p
+  // AETool, DyeTool—p
   // QMap<ExportArea, QList<QList<QRect>>> m_colLabelRects;
   // QMap<ExportArea, QList<QList<QRect>>> m_cellRects;
   QList<QList<QRect>> colLabelRects(ExportArea area) {
@@ -272,10 +271,16 @@ public:
   QList<QList<QRect>> cellRects(ExportArea area) {
     return m_cellRects.value(area, QList<QList<QRect>>());
   }
+  QList<QRect> bodyBBoxes(ExportArea area) {
+    return m_bodyBBoxes.value(area, QList<QRect>());
+  }
+
   QMap<ExportArea, ColumnsData> columns() { return m_columns; }
   bool hasTerekoColumns(ExportArea area) {
     return !m_terekoColumns.value(area, QList<TerekoInfo>()).isEmpty();
   }
+
+  int framePerPage() { return param(XSheetPDFTemplateParamIDs::FrameLength); }
 };
 
 class XSheetPDFTemplate_B4_6sec : public XSheetPDFTemplate {

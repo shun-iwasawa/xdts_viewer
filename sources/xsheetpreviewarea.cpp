@@ -216,18 +216,19 @@ XSheetPDFDataType dataStr2Type(const QString& str) {
   return map.value(str, Data_Invalid);
 }
 
-QPixmap tickMarkPm(TickMarkType type, int size, bool withBG = false) {
+QPixmap tickMarkPm(TickMarkType type, int size, const QColor color,
+                   bool withBG = false) {
   QPixmap pm(size, size);
   QPointF center(double(size) * 0.5, double(size) * 0.5);
 
   pm.fill((withBG) ? Qt::white : Qt::transparent);
   QPainter p(&pm);
-  QPen pen(Qt::black);
+  QPen pen(color);
   pen.setWidthF(double(size) / 15.0);
   p.setPen(pen);
   switch (type) {
   case TickMark_Dot: {
-    p.setBrush(Qt::black);
+    p.setBrush(color);
     double dotR = double(size) * 0.1;
     p.drawEllipse(center, dotR, dotR);
     break;
@@ -238,7 +239,7 @@ QPixmap tickMarkPm(TickMarkType type, int size, bool withBG = false) {
     break;
   }
   case TickMark_Filled: {
-    p.setBrush(Qt::black);
+    p.setBrush(color);
     double circleR = double(size) * 0.4;
     p.drawEllipse(center, circleR, circleR);
     break;
@@ -479,6 +480,7 @@ void XSheetPDFTemplate::registerCellRects(QPainter& painter, int colAmount,
   {
     for (int kc = 0; kc < colAmount; kc++) {
       QList<QRect> colCellRects;
+      QRect colBBox;
 
       painter.save();
       {
@@ -495,6 +497,9 @@ void XSheetPDFTemplate::registerCellRects(QPainter& painter, int colAmount,
 
               colCellRects.append(painter.transform().mapRect(cellRect));
               painter.translate(0, param(RowHeight));
+
+              // BBoxの更新
+              colBBox = colBBox.united(colCellRects.last());
             }
           }
           painter.restore();
@@ -507,6 +512,11 @@ void XSheetPDFTemplate::registerCellRects(QPainter& painter, int colAmount,
         m_cellRects[area].append(colCellRects);
       else
         m_cellRects[area][kc].append(colCellRects);
+
+      // BBoxの更新
+      while (m_bodyBBoxes[area].count() <= bodyId)
+        m_bodyBBoxes[area].append(QRect());
+      m_bodyBBoxes[area][bodyId] = m_bodyBBoxes[area][bodyId].united(colBBox);
 
       painter.translate(colWidth, 0);
     }
@@ -1128,7 +1138,7 @@ void XSheetPDFTemplate::drawCellNumber(QPainter& painter, QRect rect,
 
     if (cellFdata.option != FrameOption_None) {
       painter.save();
-      painter.setPen(QPen(Qt::black, 2.));
+      painter.setPen(QPen(painter.pen().color(), 2.));
       painter.translate(txtRect.center().x(), txtRect.center().y());
       if (cellFdata.option == FrameOption_KeyFrame) {
         painter.drawEllipse(QPoint(), 20, 20);
@@ -1171,7 +1181,8 @@ void XSheetPDFTemplate::drawTickMark(QPainter& painter, QRect rect,
                                      TickMarkType type, QString terekoColName) {
   QRect tickR(0, 0, rect.height(), rect.height());
   tickR.moveCenter(rect.center());
-  painter.drawPixmap(tickR, tickMarkPm(type, rect.height()));
+  painter.drawPixmap(tickR,
+                     tickMarkPm(type, rect.height(), painter.pen().color()));
 
   if (!terekoColName.isEmpty()) {
     painter.save();
@@ -1430,10 +1441,13 @@ XSheetPDFTemplate::XSheetPDFTemplate(
   m_colLabelRects_bottom.insert(Area_Cells, QList<QList<QRect>>());
   m_cellRects.insert(Area_Actions, QList<QList<QRect>>());
   m_cellRects.insert(Area_Cells, QList<QList<QRect>>());
+  m_bodyBBoxes.insert(Area_Actions, QList<QRect>());
+  m_bodyBBoxes.insert(Area_Cells, QList<QRect>());
 }
 
 void XSheetPDFTemplate::setInfo(const XSheetPDFFormatInfo& info) {
-  m_info         = info;
+  m_info = info;
+
   thinPen        = QPen(info.lineColor, param(ThinLineWidth, mm2px(0.25)),
                         Qt::SolidLine, Qt::FlatCap, Qt::MiterJoin);
   thickPen       = QPen(info.lineColor, param(ThickLineWidth, mm2px(0.5)),
@@ -1486,6 +1500,8 @@ void XSheetPDFTemplate::drawXsheetTemplate(QPainter& painter, int framePage,
   m_colLabelRects_bottom[Area_Cells].clear();
   m_cellRects[Area_Actions].clear();
   m_cellRects[Area_Cells].clear();
+  m_bodyBBoxes[Area_Actions].clear();
+  m_bodyBBoxes[Area_Cells].clear();
   m_soundCellRects.clear();
 
   // painter.setFont(QFont("Times New Roman"));
@@ -1600,6 +1616,9 @@ void XSheetPDFTemplate::drawXsheetContents(QPainter& painter, int framePage,
       repeatColumnInfos =
           m_repeatColumns.value(area, QMap<int, QList<RepeatInfo>>());
 
+    // コマの動画番号に色を付ける
+    DyedCellsData dyedCells = MyParams::instance()->dyedCells(area);
+
     int c = 0, r;
     for (int colId = startColId; c < colsInPage; c++, colId++) {
       if (colId == columns.size()) break;
@@ -1650,6 +1669,13 @@ void XSheetPDFTemplate::drawXsheetContents(QPainter& painter, int framePage,
                         columnName, true);
 
         FrameData cell = cells.at(f);
+
+        // 動画番号に着色する
+        if (dyedCells.contains({oc + startColId, f}))
+          painter.setPen(QPen(dyedCells.value({oc + startColId, f}),
+                              painter.pen().widthF()));
+        else
+          painter.setPen(QPen(Qt::black, painter.pen().widthF()));
 
         // repeat line
         // 現在のフレームがリピート線/止メの範囲かどうか？

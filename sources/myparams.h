@@ -6,6 +6,8 @@
 #include <QString>
 #include <QColor>
 #include <QMap>
+#include <QHash>
+#include <QPair>
 #include <QUndoStack>
 #include <QCursor>
 
@@ -28,7 +30,8 @@ enum ToolId {
   Tool_Selection,
   Tool_Stamp,
   Tool_Line,
-  Tool_AE
+  Tool_AE,
+  Tool_Dye
 };
 
 struct ColumnData {
@@ -38,6 +41,7 @@ struct ColumnData {
 };
 
 typedef QList<ColumnData> ColumnsData;
+typedef QHash<QPair<int, int>, QColor> DyedCellsData;
 
 enum WorkFlowType { Genga = 0, Douga, LO, RoughGen, WorkFlowTypeCount };
 
@@ -60,6 +64,9 @@ class MyParams : public QObject  // singleton
 
   MixupColumnsType m_mixUpColumnsType;
   QMap<ExportArea, QMap<int, QList<int>>> m_mixUpColumnsKeyframes;
+
+  // コマの動画番号に色を付ける
+  QMap<ExportArea, DyedCellsData> m_dyedCells;
 
   bool m_withDenpyo;
   QString m_backsideImgPath;
@@ -167,6 +174,8 @@ public:
             m_mixUpColumnsKeyframes.keys()[0] == Area_Unspecified);
   }
   void unifyOrSeparateMixupColumnsKeyframes(bool unify);
+
+  DyedCellsData& dyedCells(ExportArea area) { return m_dyedCells[area]; }
 
   void setExportArea(const ExportArea val) { m_exportArea = val; }
   ExportArea exportArea() const { return m_exportArea; }

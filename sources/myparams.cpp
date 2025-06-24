@@ -413,6 +413,26 @@ bool MyParams::loadFormatSettingsIfExists() {
       settings.value("StartOverlapFrameLength", 0).toInt();
   m_endOverlapFrameLength = settings.value("EndOverlapFrameLength", 0).toInt();
 
+  m_dyedCells.clear();
+  keyAreaCount = settings.beginReadArray("DyedCells");
+  for (int i = 0; i < keyAreaCount; i++) {
+    settings.setArrayIndex(i);
+    ExportArea area = (ExportArea)settings.value("AreaId").toInt();
+    DyedCellsData dyedCellsData;
+    for (auto key : settings.childKeys()) {
+      if (key == "AreaId") continue;
+      QStringList posCoordList = key.split("_", Qt::SkipEmptyParts);
+      if (posCoordList.isEmpty()) continue;
+      QColor color;
+      color.setNamedColor(settings.value(key).toString());
+      dyedCellsData.insert({posCoordList[0].toInt(), posCoordList[1].toInt()},
+                           color);
+    }
+    m_dyedCells.insert(area, dyedCellsData);
+  }
+
+  settings.endArray();
+
   QString areaName =
       settings.value("ExportArea", exportAreaNameList[m_exportArea]).toString();
   m_exportArea = (ExportArea)exportAreaNameList.indexOf(areaName);
@@ -472,6 +492,26 @@ void MyParams::saveFormatSettings() {
   settings.setValue("ScannedSheetPageAmount", m_scannedSheetPageAmount);
   settings.setValue("StartOverlapFrameLength", m_startOverlapFrameLength);
   settings.setValue("EndOverlapFrameLength", m_endOverlapFrameLength);
+
+  settings.remove("DyedCells");
+  if (!m_dyedCells.isEmpty()) {
+    settings.beginWriteArray("DyedCells");
+    int i = 0;
+    for (auto area : m_dyedCells.keys()) {
+      DyedCellsData dyedCellsData = m_dyedCells.value(area);
+      if (dyedCellsData.isEmpty()) continue;
+      settings.setArrayIndex(i);
+      settings.setValue("AreaId", (int)area);
+      for (auto pos : dyedCellsData.keys()) {
+        QColor color = dyedCellsData.value(pos);
+        settings.setValue(QString("%1_%2").arg(pos.first).arg(pos.second),
+                          color.name());
+      }
+      i++;
+    }
+    settings.endArray();
+  }
+
   settings.endGroup();
 
   setFormatDirty(false);
@@ -640,7 +680,8 @@ QRect MyParams::loadWindowGeometry() const {
 void MyParams::setCurrentTool(ToolId id) {
   if (m_currentToolId == id) return;
   ToolId previousToolId = m_currentToolId;
-  m_currentToolId       = id;
+  currentTool()->onDeactivate();
+  m_currentToolId = id;
   if (!currentTool()->onActivate()) m_currentToolId = previousToolId;
   emit toolSwitched();
 }

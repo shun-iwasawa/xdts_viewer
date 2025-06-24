@@ -175,8 +175,6 @@ void AETool::draw(QPainter& painter, QPointF pos, double scaleFactor) {
       painter.drawRect(cellRect);
     }
   }
-
-  painter.restore();
 }
 
 bool AETool::onActivate() {

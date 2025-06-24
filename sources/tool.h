@@ -31,6 +31,7 @@ public:
   virtual void onMove(const QPointF& pos) {}
   virtual void onRelease(const QPointF& pos, QImage& canvasImg,
                          const QPointF& canvasPos) {}
+  virtual void onDeactivate() {}
   virtual bool onActivate() { return true; }  // ツール変更可能ならtrueを返す
   virtual void draw(QPainter& painter, QPointF pos, double scaleFactor) {}
   virtual void addContextMenu(QMenu* menu) {}

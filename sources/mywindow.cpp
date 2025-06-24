@@ -141,8 +141,9 @@ MyWindow::MyWindow()
   toolBar->addWidget(spacer);
 
   // color selector
-  QList<QColor> colors = {QColor(Qt::black), QColor(Qt::red), QColor(Qt::blue),
-                          QColor(Qt::yellow), QColor(Qt::darkGreen)};
+  QList<QColor> colors = {QColor(Qt::black),     QColor(Qt::red),
+                          QColor(Qt::blue),      QColor(Qt::yellow),
+                          QColor(Qt::darkGreen), QColor(Qt::white)};
   QColor currentColor  = MyParams::instance()->currentColor();
   m_currentColorAction =
       toolBar->addAction(color2Icon(currentColor), tr("Current Color"));
@@ -307,6 +308,14 @@ MyWindow::MyWindow()
   stampToolButton->setMenu(stampMenu);
   stampToolButton->setStyle(new MyToolButtonProxyStyle);
 
+  // 動画番号着色ツール
+  QAction* dyeToolAct =
+      toolBar->addAction(QIcon(":Resources/dye.svg"), tr("Dye Numbers (D)"));
+  dyeToolAct->setCheckable(true);
+  if (currentToolId == Tool_Dye) dyeToolAct->setChecked(true);
+  dyeToolAct->setData(Tool_Dye);
+  m_toolActionGroup->addAction(dyeToolAct);
+
   // AEタイムリマップ書き出しツール
   QAction* aeToolAct =
       toolBar->addAction(QIcon(":Resources/ae.svg"),
@@ -446,6 +455,7 @@ MyWindow::MyWindow()
   selectionToolAct->setShortcut(QKeySequence("m"));
   lineToolAct->setShortcut(QKeySequence("u"));
   stampToolAct->setShortcut(QKeySequence("s"));
+  dyeToolAct->setShortcut(QKeySequence("d"));
 
   // m_previewPane->fitScaleTo(m_previewArea->size());
 }

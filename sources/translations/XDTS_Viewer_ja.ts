@@ -17,18 +17,18 @@
     </message>
     <message>
         <location filename="../aetool.cpp" line="105"/>
-        <location filename="../aetool.cpp" line="192"/>
-        <location filename="../aetool.cpp" line="202"/>
+        <location filename="../aetool.cpp" line="190"/>
+        <location filename="../aetool.cpp" line="200"/>
         <source>Copy After Effects Keyframe Data To Clipboard</source>
         <translation>AEタイムリマップデータをクリップボードにコピー</translation>
     </message>
     <message>
-        <location filename="../aetool.cpp" line="193"/>
+        <location filename="../aetool.cpp" line="191"/>
         <source>This tool requires XDTS to be displayed in the Cell area.</source>
         <translation>このツールを使用するためには、セル（動画）欄にXDTSを表示する必要があります。</translation>
     </message>
     <message>
-        <location filename="../aetool.cpp" line="203"/>
+        <location filename="../aetool.cpp" line="201"/>
         <source>There are mix-up columns in the Cell area.
 Please turn off the &quot;Mix-up Columns&quot; checkbox in the Settings in order to use this tool.</source>
         <translation>セル（動画）欄にテレコ列があります。
@@ -114,51 +114,51 @@ Please turn off the &quot;Mix-up Columns&quot; checkbox in the Settings in order
 <context>
     <name>MyParams</name>
     <message>
-        <location filename="../myparams.cpp" line="533"/>
+        <location filename="../myparams.cpp" line="573"/>
         <source>Circle</source>
         <translation>丸</translation>
     </message>
     <message>
-        <location filename="../myparams.cpp" line="545"/>
+        <location filename="../myparams.cpp" line="585"/>
         <source>Triangle</source>
         <translation>三角</translation>
     </message>
     <message>
-        <location filename="../myparams.cpp" line="572"/>
+        <location filename="../myparams.cpp" line="612"/>
         <source>Approve</source>
         <translation>承認印</translation>
     </message>
     <message>
-        <location filename="../myparams.cpp" line="695"/>
+        <location filename="../myparams.cpp" line="736"/>
         <source>Save Empty XDTS File</source>
         <translation>空のXDTSファイルを保存する</translation>
     </message>
     <message>
-        <location filename="../myparams.cpp" line="697"/>
+        <location filename="../myparams.cpp" line="738"/>
         <source>XDTS Files (*.xdts)</source>
         <translation>XDTSファイル (*.xdts)</translation>
     </message>
     <message>
-        <location filename="../myparams.cpp" line="705"/>
+        <location filename="../myparams.cpp" line="746"/>
         <source>The file %1 already exists.
 </source>
         <translation>ファイル%1は既に存在します。
 </translation>
     </message>
     <message>
-        <location filename="../myparams.cpp" line="707"/>
+        <location filename="../myparams.cpp" line="748"/>
         <source>The folder %1 already exists.
 </source>
         <translation>フォルダ%1は既に存在します。
 </translation>
     </message>
     <message>
-        <location filename="../myparams.cpp" line="708"/>
+        <location filename="../myparams.cpp" line="749"/>
         <source>Do you want to overwrite it?</source>
         <translation>上書きしてよろしいですか？</translation>
     </message>
     <message>
-        <location filename="../myparams.cpp" line="711"/>
+        <location filename="../myparams.cpp" line="752"/>
         <source>Question</source>
         <translation>質問</translation>
     </message>
@@ -212,211 +212,216 @@ Please turn off the &quot;Mix-up Columns&quot; checkbox in the Settings in order
         <translation>ズームアウト (Ctrl+Minus)</translation>
     </message>
     <message>
-        <location filename="../mywindow.cpp" line="148"/>
+        <location filename="../mywindow.cpp" line="149"/>
         <source>Current Color</source>
         <translation>描画色</translation>
     </message>
     <message>
-        <location filename="../mywindow.cpp" line="177"/>
+        <location filename="../mywindow.cpp" line="178"/>
         <source>Brush (B)</source>
         <translation>ペン (B)</translation>
     </message>
     <message>
-        <location filename="../mywindow.cpp" line="189"/>
+        <location filename="../mywindow.cpp" line="190"/>
         <source>Large</source>
         <translation>大サイズ</translation>
     </message>
     <message>
-        <location filename="../mywindow.cpp" line="195"/>
+        <location filename="../mywindow.cpp" line="196"/>
         <source>Small</source>
         <translation>小サイズ</translation>
     </message>
     <message>
-        <location filename="../mywindow.cpp" line="205"/>
+        <location filename="../mywindow.cpp" line="206"/>
         <source>Eraser (E)</source>
         <translation>消しゴム (E)</translation>
     </message>
     <message>
-        <location filename="../mywindow.cpp" line="220"/>
+        <location filename="../mywindow.cpp" line="221"/>
         <source>Selection (M)</source>
         <translation>選択 （M）</translation>
     </message>
     <message>
-        <location filename="../mywindow.cpp" line="232"/>
+        <location filename="../mywindow.cpp" line="233"/>
         <source>Rectangle</source>
         <translation>四角形</translation>
     </message>
     <message>
-        <location filename="../mywindow.cpp" line="238"/>
+        <location filename="../mywindow.cpp" line="239"/>
         <source>Freehand</source>
         <translation>なげなわ</translation>
     </message>
     <message>
-        <location filename="../mywindow.cpp" line="259"/>
+        <location filename="../mywindow.cpp" line="260"/>
         <source>Line (U)</source>
         <translation>線 （U）</translation>
     </message>
     <message>
-        <location filename="../mywindow.cpp" line="253"/>
+        <location filename="../mywindow.cpp" line="254"/>
         <source>Thin Line</source>
         <translation>細い線</translation>
     </message>
     <message>
-        <location filename="../mywindow.cpp" line="253"/>
+        <location filename="../mywindow.cpp" line="254"/>
         <source>Thick Line</source>
         <translation>太い線</translation>
     </message>
     <message>
-        <location filename="../mywindow.cpp" line="254"/>
+        <location filename="../mywindow.cpp" line="255"/>
         <source>Thin Arrow</source>
         <translation>細い矢印</translation>
     </message>
     <message>
-        <location filename="../mywindow.cpp" line="254"/>
+        <location filename="../mywindow.cpp" line="255"/>
         <source>Thick Arrow</source>
         <translation>太い矢印</translation>
     </message>
     <message>
-        <location filename="../mywindow.cpp" line="255"/>
+        <location filename="../mywindow.cpp" line="256"/>
         <source>Double Line</source>
         <translation>二重線</translation>
     </message>
     <message>
-        <location filename="../mywindow.cpp" line="255"/>
+        <location filename="../mywindow.cpp" line="256"/>
         <source>Dotted Line</source>
         <translation>点線</translation>
     </message>
     <message>
-        <location filename="../mywindow.cpp" line="283"/>
+        <location filename="../mywindow.cpp" line="284"/>
         <source>Stamp (S)</source>
         <translation>スタンプ （S）</translation>
     </message>
     <message>
         <location filename="../mywindow.cpp" line="313"/>
+        <source>Dye Numbers (D)</source>
+        <translation>動画番号を着色 （D）</translation>
+    </message>
+    <message>
+        <location filename="../mywindow.cpp" line="322"/>
         <source>Copy After Effects Keyframe Data To Clipboard</source>
         <translation>AEタイムリマップデータをクリップボードにコピー</translation>
     </message>
     <message>
-        <location filename="../mywindow.cpp" line="323"/>
+        <location filename="../mywindow.cpp" line="332"/>
         <source>Settings</source>
         <translation>タイムシート設定</translation>
     </message>
     <message>
-        <location filename="../mywindow.cpp" line="326"/>
+        <location filename="../mywindow.cpp" line="335"/>
         <source>Menu</source>
         <translation>メニュー</translation>
     </message>
     <message>
-        <location filename="../mywindow.cpp" line="328"/>
+        <location filename="../mywindow.cpp" line="337"/>
         <source>Preferences</source>
         <translation>環境設定</translation>
     </message>
     <message>
-        <location filename="../mywindow.cpp" line="329"/>
+        <location filename="../mywindow.cpp" line="338"/>
         <source>About</source>
         <translation>XDTS Viewerについて</translation>
     </message>
     <message>
-        <location filename="../mywindow.cpp" line="349"/>
+        <location filename="../mywindow.cpp" line="358"/>
         <source>Cut</source>
         <translation>切り取り</translation>
     </message>
     <message>
-        <location filename="../mywindow.cpp" line="350"/>
+        <location filename="../mywindow.cpp" line="359"/>
         <source>Copy</source>
         <translation>コピー</translation>
     </message>
     <message>
-        <location filename="../mywindow.cpp" line="351"/>
+        <location filename="../mywindow.cpp" line="360"/>
         <source>Paste</source>
         <translation>貼り付け</translation>
     </message>
     <message>
-        <location filename="../mywindow.cpp" line="352"/>
+        <location filename="../mywindow.cpp" line="361"/>
         <source>Delete</source>
         <translation>消去</translation>
     </message>
     <message>
-        <location filename="../mywindow.cpp" line="353"/>
+        <location filename="../mywindow.cpp" line="362"/>
         <source>Previous Page</source>
         <translation>前ページ</translation>
     </message>
     <message>
-        <location filename="../mywindow.cpp" line="354"/>
+        <location filename="../mywindow.cpp" line="363"/>
         <source>Next Page</source>
         <translation>次ページ</translation>
     </message>
     <message>
-        <location filename="../mywindow.cpp" line="474"/>
-        <location filename="../mywindow.cpp" line="868"/>
+        <location filename="../mywindow.cpp" line="484"/>
+        <location filename="../mywindow.cpp" line="878"/>
         <source>Error</source>
         <translation>エラー</translation>
     </message>
     <message>
-        <location filename="../mywindow.cpp" line="475"/>
+        <location filename="../mywindow.cpp" line="485"/>
         <source>The preset file %1 is not valid.</source>
         <translation>プリセットファイル %1 を正しく読み込めません。</translation>
     </message>
     <message>
-        <location filename="../mywindow.cpp" line="795"/>
+        <location filename="../mywindow.cpp" line="805"/>
         <source>Undo</source>
         <translation>元に戻す</translation>
     </message>
     <message>
-        <location filename="../mywindow.cpp" line="796"/>
+        <location filename="../mywindow.cpp" line="806"/>
         <source>No more Undo operations available.</source>
         <translation>これ以上元に戻す操作がありません。</translation>
     </message>
     <message>
-        <location filename="../mywindow.cpp" line="809"/>
+        <location filename="../mywindow.cpp" line="819"/>
         <source>Redo</source>
         <translation>やり直す</translation>
     </message>
     <message>
-        <location filename="../mywindow.cpp" line="810"/>
+        <location filename="../mywindow.cpp" line="820"/>
         <source>No more Redo operations available.</source>
         <translation>これ以上やり直す操作がありません。</translation>
     </message>
     <message>
-        <location filename="../mywindow.cpp" line="845"/>
+        <location filename="../mywindow.cpp" line="855"/>
         <source>Open XDTS File</source>
         <translation>XDTSファイルを開く</translation>
     </message>
     <message>
-        <location filename="../mywindow.cpp" line="845"/>
+        <location filename="../mywindow.cpp" line="855"/>
         <source>XDTS files (*.xdts)</source>
         <translation>XDTSファイル (*.xdts)</translation>
     </message>
     <message>
-        <location filename="../mywindow.cpp" line="869"/>
+        <location filename="../mywindow.cpp" line="879"/>
         <source>%1 is not a valid XDTS file.</source>
         <translation>%1 は正しくXDTSファイルとして読み込めません。</translation>
     </message>
     <message>
-        <location filename="../mywindow.cpp" line="946"/>
+        <location filename="../mywindow.cpp" line="956"/>
         <source>Untitled</source>
         <translation>名称未設定</translation>
     </message>
     <message>
-        <location filename="../mywindow.cpp" line="1048"/>
+        <location filename="../mywindow.cpp" line="1058"/>
         <source>PNG (*.png);;PSD files (*.psd)</source>
         <translation>PNG (*.png);;Photoshop (*.psd)</translation>
     </message>
     <message>
         <location filename="../mywindow_psdexport.cpp" line="205"/>
-        <location filename="../mywindow.cpp" line="1047"/>
-        <location filename="../mywindow.cpp" line="1051"/>
-        <location filename="../mywindow.cpp" line="1128"/>
+        <location filename="../mywindow.cpp" line="1057"/>
+        <location filename="../mywindow.cpp" line="1061"/>
+        <location filename="../mywindow.cpp" line="1138"/>
         <source>Export Images</source>
         <translation>シート画像を書き出し</translation>
     </message>
     <message>
-        <location filename="../mywindow.cpp" line="1051"/>
+        <location filename="../mywindow.cpp" line="1061"/>
         <source>PNG (*.png)</source>
         <translation>PNG (*.png)</translation>
     </message>
     <message>
-        <location filename="../mywindow.cpp" line="1085"/>
+        <location filename="../mywindow.cpp" line="1095"/>
         <source>Following file(s) are already exist. Do you want to overwrite them?</source>
         <translation>以下のファイルはすでに存在します。上書きしてよろしいですか？</translation>
     </message>
@@ -429,31 +434,31 @@ Do you want to overwrite them?</source>
     </message>
     <message>
         <location filename="../mywindow_psdexport.cpp" line="204"/>
-        <location filename="../mywindow.cpp" line="1127"/>
+        <location filename="../mywindow.cpp" line="1137"/>
         <source>OK</source>
         <translation>OK</translation>
     </message>
     <message>
         <location filename="../mywindow_psdexport.cpp" line="204"/>
-        <location filename="../mywindow.cpp" line="1127"/>
+        <location filename="../mywindow.cpp" line="1137"/>
         <source>Open containing folder</source>
         <translation>フォルダを開く</translation>
     </message>
     <message>
         <location filename="../mywindow_psdexport.cpp" line="206"/>
-        <location filename="../mywindow.cpp" line="1129"/>
+        <location filename="../mywindow.cpp" line="1139"/>
         <source>Xsheet images are exported properly.</source>
         <translation>シート画像の書き出しが完了しました。</translation>
     </message>
     <message>
         <location filename="../mywindow_psdexport.cpp" line="149"/>
-        <location filename="../mywindow.cpp" line="959"/>
-        <location filename="../mywindow.cpp" line="1089"/>
+        <location filename="../mywindow.cpp" line="969"/>
+        <location filename="../mywindow.cpp" line="1099"/>
         <source>Question</source>
         <translation>質問</translation>
     </message>
     <message>
-        <location filename="../mywindow.cpp" line="960"/>
+        <location filename="../mywindow.cpp" line="970"/>
         <source>The document has been modified.
 Do you want to save your changes?</source>
         <translation>ドキュメントは変更されました。保存しますか？</translation>
@@ -636,56 +641,56 @@ for &quot;REPEAT&quot; symbol:</source>
         <translation>枚目</translation>
     </message>
     <message>
-        <location filename="../xsheetpreviewarea.cpp" line="593"/>
+        <location filename="../xsheetpreviewarea.cpp" line="611"/>
         <source>ACTION</source>
         <comment>XSheetPDF</comment>
         <translation>アクション</translation>
     </message>
     <message>
-        <location filename="../xsheetpreviewarea.cpp" line="687"/>
+        <location filename="../xsheetpreviewarea.cpp" line="705"/>
         <source>S</source>
         <comment>XSheetPDF</comment>
         <translation>台詞</translation>
     </message>
     <message>
-        <location filename="../xsheetpreviewarea.cpp" line="789"/>
+        <location filename="../xsheetpreviewarea.cpp" line="807"/>
         <source>CELL</source>
         <comment>XSheetPDF</comment>
         <translation>セル</translation>
     </message>
     <message>
-        <location filename="../xsheetpreviewarea.cpp" line="826"/>
+        <location filename="../xsheetpreviewarea.cpp" line="844"/>
         <source>CAMERA</source>
         <comment>XSheetPDF</comment>
         <translation>カメラ</translation>
     </message>
     <message>
-        <location filename="../xsheetpreviewarea.cpp" line="1757"/>
+        <location filename="../xsheetpreviewarea.cpp" line="1793"/>
         <source>HOLD</source>
         <translation>止メ</translation>
     </message>
     <message>
-        <location filename="../xsheetpreviewarea.cpp" line="1757"/>
+        <location filename="../xsheetpreviewarea.cpp" line="1793"/>
         <source>REPEAT</source>
         <translation>リピ|ト</translation>
     </message>
     <message>
-        <location filename="../xsheetpreviewarea.cpp" line="1869"/>
+        <location filename="../xsheetpreviewarea.cpp" line="1905"/>
         <source>(Start OL %1+%2) </source>
         <translation>（前O.L. %1秒+%2コマ） </translation>
     </message>
     <message>
-        <location filename="../xsheetpreviewarea.cpp" line="1874"/>
+        <location filename="../xsheetpreviewarea.cpp" line="1910"/>
         <source> (End OL %1+%2)</source>
         <translation> （後O.L. %1秒+%2コマ）</translation>
     </message>
     <message>
-        <location filename="../xsheetpreviewarea.cpp" line="2159"/>
+        <location filename="../xsheetpreviewarea.cpp" line="2195"/>
         <source>Warning</source>
         <translation>警告</translation>
     </message>
     <message>
-        <location filename="../xsheetpreviewarea.cpp" line="2160"/>
+        <location filename="../xsheetpreviewarea.cpp" line="2196"/>
         <source>The number of columns in the saved mix-up columns keyframe 
 does not match the number of columns currently displayed.
 The keyframe will be cleared.</source>
@@ -693,37 +698,37 @@ The keyframe will be cleared.</source>
 キーフレームはクリアされます。</translation>
     </message>
     <message>
-        <location filename="../xsheetpreviewarea.cpp" line="2348"/>
+        <location filename="../xsheetpreviewarea.cpp" line="2386"/>
         <source>EPISODE</source>
         <comment>XSheetPDF</comment>
         <translation>第&#x3000;&#x3000;話</translation>
     </message>
     <message>
-        <location filename="../xsheetpreviewarea.cpp" line="2349"/>
+        <location filename="../xsheetpreviewarea.cpp" line="2387"/>
         <source>SEQ.</source>
         <comment>XSheetPDF</comment>
         <translation>シーン</translation>
     </message>
     <message>
-        <location filename="../xsheetpreviewarea.cpp" line="2350"/>
+        <location filename="../xsheetpreviewarea.cpp" line="2388"/>
         <source>SCENE</source>
         <comment>XSheetPDF</comment>
         <translation>カット</translation>
     </message>
     <message>
-        <location filename="../xsheetpreviewarea.cpp" line="2351"/>
+        <location filename="../xsheetpreviewarea.cpp" line="2389"/>
         <source>TIME</source>
         <comment>XSheetPDF</comment>
         <translation>タイム</translation>
     </message>
     <message>
-        <location filename="../xsheetpreviewarea.cpp" line="2352"/>
+        <location filename="../xsheetpreviewarea.cpp" line="2390"/>
         <source>NAME</source>
         <comment>XSheetPDF</comment>
         <translation>原画</translation>
     </message>
     <message>
-        <location filename="../xsheetpreviewarea.cpp" line="2353"/>
+        <location filename="../xsheetpreviewarea.cpp" line="2391"/>
         <source>SHEET</source>
         <comment>XSheetPDF</comment>
         <translation>シート</translation>
@@ -908,7 +913,7 @@ The keyframe will be cleared.</source>
 <context>
     <name>XsheetPdfPreviewArea</name>
     <message>
-        <location filename="../xsheetpreviewarea.cpp" line="2756"/>
+        <location filename="../xsheetpreviewarea.cpp" line="2794"/>
         <source>Fit To Window</source>
         <translation>ウィンドウにフィット</translation>
     </message>

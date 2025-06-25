@@ -359,7 +359,6 @@ int secKoma2Frame(int sec, int koma) { return sec * 24 + koma; }
 inline bool isNotEmptyOrSymbol(const QString& frame) {
   return !frame.isEmpty() && frame != XdtsFrameDataItem::SYMBOL_TICK_1 &&
          frame != XdtsFrameDataItem::SYMBOL_TICK_2 &&
-         frame != XdtsFrameDataItem::SYMBOL_NULL_CELL &&
          frame != XdtsFrameDataItem::SYMBOL_HYPHEN;
 }
 

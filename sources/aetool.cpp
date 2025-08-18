@@ -195,7 +195,7 @@ bool AETool::onActivate() {
 
   // テレコ表示がONで、テレコが実際にあったら警告を出してツールを元に戻す
   XSheetPDFTemplate* tmpl = MyParams::instance()->currentTemplate();
-  if (tmpl->hasTerekoColumns(Area_Cells)) {
+  if (tmpl && tmpl->hasTerekoColumns(Area_Cells)) {
     QMessageBox::warning(
         m_view, tr("Copy After Effects Keyframe Data To Clipboard"),
         tr("There are mix-up columns in the Cell area.\nPlease turn off the "

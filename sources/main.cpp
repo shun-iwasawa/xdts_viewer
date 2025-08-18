@@ -8,6 +8,7 @@
 #include <QApplication>
 #include <QTranslator>
 #include <QDir>
+#include <QScreen>
 
 #ifndef __MACOS__
 #include <QtPlatformHeaders/QWindowsWindowFunctions>
@@ -49,7 +50,14 @@ int main(int argc, char* argv[]) {
   MyWindow w;
 
   QRect geometry = MyParams::instance()->loadWindowGeometry();
-  if (!geometry.isNull()) w.setGeometry(geometry);
+  if (!geometry.isNull()) {
+    for (auto screen : a.screens()) {
+      if (screen->availableGeometry().contains(geometry.center())) {
+        w.setGeometry(geometry);
+        break;
+      }
+    }
+  }
 
   w.show();
   w.initialize();

@@ -65,7 +65,14 @@ class MyParams : public QObject  // singleton
   bool m_expandColumns;
 
   MixupColumnsType m_mixUpColumnsType;
-  QMap<ExportArea, QMap<int, QList<int>>> m_mixUpColumnsKeyframes;
+
+  struct MixUpColumnsKeyFramesInfo {
+    QStringList
+        colNames;  // テレコのつじつまを合わせるために保持する、現在のセル名の一覧
+    QMap<int, QList<int>> keyframes;
+  };
+
+  QMap<ExportArea, MixUpColumnsKeyFramesInfo> m_mixUpColumnsKeyframes;
 
   // コマの動画番号に色を付ける
   QMap<ExportArea, DyedCellsData> m_dyedCells;
@@ -165,8 +172,12 @@ public:
   MixupColumnsType mixUpColumnsType() { return m_mixUpColumnsType; }
 
   QMap<int, QList<int>>& mixUpColumnsKeyframes(ExportArea area);
+  QStringList mixUpColumnsNames(ExportArea area) const;
   void setMixupColumnsKeyframe(ExportArea area, int frame, QList<int> data) {
     mixUpColumnsKeyframes(area).insert(frame, data);
+  }
+  void setMixUpColumnsNames(const ExportArea area, const QStringList colNames) {
+    m_mixUpColumnsKeyframes[area].colNames = colNames;
   }
   void deleteMixUpColumnsKeyframeAt(ExportArea area, int frame) {
     mixUpColumnsKeyframes(area).remove(frame);

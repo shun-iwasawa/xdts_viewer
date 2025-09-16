@@ -388,8 +388,14 @@ bool MyParams::loadFormatSettingsIfExists() {
     settings.setArrayIndex(i);
     ExportArea area = (ExportArea)settings.value("AreaId").toInt();
     QMap<int, QList<int>> keyframes;
+    QStringList colNames;
     for (auto key : settings.childKeys()) {
-      if (key == "AreaId") continue;
+      if (key == "AreaId")
+        continue;
+      else if (key == "ColNames") {
+        colNames = settings.value(key).toStringList();
+        continue;
+      }
       int keyFrame = key.toInt();
       QStringList colIdStrList =
           settings.value(key).toString().split(",", Qt::SkipEmptyParts);
@@ -398,7 +404,7 @@ bool MyParams::loadFormatSettingsIfExists() {
       for (auto colIdStr : colIdStrList) colIdList.append(colIdStr.toInt());
       keyframes.insert(keyFrame, colIdList);
     }
-    m_mixUpColumnsKeyframes.insert(area, keyframes);
+    m_mixUpColumnsKeyframes.insert(area, {colNames, keyframes});
   }
   settings.endArray();
 
@@ -472,10 +478,13 @@ void MyParams::saveFormatSettings() {
     settings.beginWriteArray("MixUpColumnsKeyframes");
     int i = 0;
     for (auto area : m_mixUpColumnsKeyframes.keys()) {
-      QMap<int, QList<int>> keyframes = m_mixUpColumnsKeyframes.value(area);
+      QStringList colNames = m_mixUpColumnsKeyframes.value(area).colNames;
+      QMap<int, QList<int>> keyframes =
+          m_mixUpColumnsKeyframes.value(area).keyframes;
       if (keyframes.isEmpty()) continue;
       settings.setArrayIndex(i);
       settings.setValue("AreaId", (int)area);
+      settings.setValue("ColNames", colNames);
       for (auto frame : keyframes.keys()) {
         QList<int> colIdList = keyframes.value(frame);
         if (colIdList.isEmpty()) continue;
@@ -887,16 +896,26 @@ QString MyParams::backsideImgPath(bool asIs) const {
 // AreaÇ™Ç†ÇÈèÍçáÇÕÇªÇÍÇï‘Ç∑ÅBUnspecifiedÇæÇØÇ™Ç†ÇÈèÍçáÇÕÇªÇøÇÁÇï‘Ç∑
 QMap<int, QList<int>>& MyParams::mixUpColumnsKeyframes(ExportArea area) {
   if (m_mixUpColumnsKeyframes.contains(area))
-    return m_mixUpColumnsKeyframes[area];
+    return m_mixUpColumnsKeyframes[area].keyframes;
   if (m_mixUpColumnsKeyframes.contains(Area_Unspecified))
-    return m_mixUpColumnsKeyframes[Area_Unspecified];
+    return m_mixUpColumnsKeyframes[Area_Unspecified].keyframes;
 
   // êVÇΩÇ…MapÇìoò^
   ExportArea regArea =
       (MyParams::isMixUpColumnsKeyframesShared()) ? Area_Unspecified : area;
 
-  m_mixUpColumnsKeyframes.insert(regArea, QMap<int, QList<int>>());
-  return m_mixUpColumnsKeyframes[regArea];
+  m_mixUpColumnsKeyframes.insert(regArea,
+                                 {QStringList(), QMap<int, QList<int>>()});
+  return m_mixUpColumnsKeyframes[regArea].keyframes;
+}
+
+QStringList MyParams::mixUpColumnsNames(ExportArea area) const {
+  if (m_mixUpColumnsKeyframes.contains(area))
+    return m_mixUpColumnsKeyframes[area].colNames;
+  if (m_mixUpColumnsKeyframes.contains(Area_Unspecified))
+    return m_mixUpColumnsKeyframes[Area_Unspecified].colNames;
+
+  return QStringList();
 }
 
 void MyParams::unifyOrSeparateMixupColumnsKeyframes(bool unify) {

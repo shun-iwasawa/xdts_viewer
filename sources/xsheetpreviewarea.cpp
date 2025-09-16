@@ -2169,6 +2169,74 @@ void XSheetPDFTemplate::checkTerekoColumns() {
 }
 
 //---------------------------------------------------------
+namespace {
+
+// rename duplicated columns name in the tempolary column list
+void renameDuplicatedColumnName(QStringList& list) {
+  int count = 1;
+  for (int i = 1; i < list.size(); i++) {
+    QString name = list[i];
+    for (int j = 0; j < i - 1; j++) {
+      if (name == list[j]) {
+        for (int c = 0; c < count; c++) name += "_dup";
+        list.replace(i, name);
+        count++;
+      }
+    }
+  }
+}
+
+void modifyTerekoKeyFrames(const ExportArea area, QStringList currentColNames,
+                           QStringList savedColNames = QStringList()) {
+  QMap<int, QList<int>> keyframes =
+      MyParams::instance()->mixUpColumnsKeyframes(area);
+
+  if (savedColNames.isEmpty()) {
+    int savedSize = keyframes.begin().value().size();
+    for (int i = 0; i < savedSize; i++) {
+      if (i < currentColNames.size())
+        savedColNames.append(currentColNames[i]);
+      else
+        savedColNames.append(QString());
+    }
+  }
+  renameDuplicatedColumnName(currentColNames);
+  renameDuplicatedColumnName(savedColNames);
+
+  // columnIndexの変換対応表を作る
+  QList<QList<int>> convertTable;
+  for (auto savedColName : savedColNames) {
+    int indexInCurrent = currentColNames.indexOf(savedColName);
+    if (indexInCurrent == -1) {
+      convertTable.push_back({-1});
+    } else {
+      QList<int> indexList = {indexInCurrent};
+      for (int k = indexInCurrent + 1; k < currentColNames.size(); k++) {
+        QString tmpColName = currentColNames.at(k);
+        if (!savedColNames.contains(tmpColName))
+          indexList.append(k);
+        else
+          break;
+      }
+      convertTable.append(indexList);
+    }
+  }
+
+  // 各キーフレームを編集する
+  for (int frame : keyframes.keys()) {
+    QList<int> oldKeyFrame = keyframes[frame];
+    QList<int> newKeyFrame;
+
+    for (auto oldColIndex : oldKeyFrame) {
+      if (convertTable[oldColIndex][0] == -1) continue;
+      newKeyFrame.append(convertTable[oldColIndex]);
+    }
+
+    MyParams::instance()->setMixupColumnsKeyframe(area, frame, newKeyFrame);
+  }
+}
+
+}  // namespace
 
 void XSheetPDFTemplate::checkMixupColumnsKeyframes() {
   // 列名の一覧を取得
@@ -2190,31 +2258,71 @@ void XSheetPDFTemplate::checkMixupColumnsKeyframes() {
     MyParams::instance()->unifyOrSeparateMixupColumnsKeyframes(false);
   }
 
-  bool somethingRemoved = false;
+  bool somethingChanged = false;
 
   // 各エリアの列数とキーフレームの列数が一致しているか確認する
   for (auto area : colNamesMap.keys()) {
+    QStringList currentColNames = colNamesMap[area];
+
+    ExportArea _area = (MyParams::instance()->isMixUpColumnsKeyframesShared())
+                           ? ExportArea::Area_Unspecified
+                           : area;
+
     QMap<int, QList<int>> keyframes =
-        MyParams::instance()->mixUpColumnsKeyframes(area);
+        MyParams::instance()->mixUpColumnsKeyframes(_area);
     if (keyframes.isEmpty()) continue;
 
-    // 列数が同じなら問題なし
-    if (keyframes.begin().value().size() == colNamesMap[area].size()) continue;
+    // カラム名一覧が保持されているか？
+    QStringList savedColNames = MyParams::instance()->mixUpColumnsNames(_area);
+    // 保持されている場合
+    if (!savedColNames.isEmpty()) {
+      // 内容が現状に一致しているか？
+      // 一致している場合
+      if (savedColNames == currentColNames) {
+        // そのままでOK
+        continue;
+      }
+      // 一致していない場合
+      // 組み換えテーブルを作ってキーフレームを編集する
+      modifyTerekoKeyFrames(_area, currentColNames, savedColNames);
+      // 現状のカラム名をキープする
+      MyParams::instance()->setMixUpColumnsNames(_area, currentColNames);
+      // ダイアログも出す
+      somethingChanged = true;
+    }
+    // 保持されていない場合
+    else {
+      // 列数が同じか？
+      if (keyframes.begin().value().size() == currentColNames.size()) {
+        //// 現状のカラム名をキープする。キーフレームはそのままでOK
+        MyParams::instance()->setMixUpColumnsNames(_area, currentColNames);
+        continue;
+      }
+      // 一致していない場合
+      // 頭からカラム名を入れた組み換えテーブルを作ってキーフレームを編集する
+      modifyTerekoKeyFrames(_area, currentColNames);
+      // 現状のカラム名をキープする
+      MyParams::instance()->setMixUpColumnsNames(_area, currentColNames);
+      // ダイアログも出す
+      somethingChanged = true;
+    }
 
-    MyParams::instance()->clearMixUpColumnsKeyframes(area);
-    MyParams::instance()->setFormatDirty(true);
-    somethingRemoved = true;
+    if (MyParams::instance()->isMixUpColumnsKeyframesShared()) break;
   }
 
   // 違ったら警告を出してキーフレームをクリアする
-  // 保存されているテレコ列キーフレームの列数が、現在表示されている列数と一致しません。キーフレームはクリアされます。
-  if (somethingRemoved) {
+  // 保存されているテレコ列キーフレームが現在表示されている列と一致しないため、テレコキーフレームが自動的に調整されました。
+  // 調整が正しく行われたかどうか、確認が必要かもしれません。
+  if (somethingChanged) {
+    MyParams::instance()->setFormatDirty(true);
     QMessageBox::warning(
         nullptr, QObject::tr("Warning"),
         QObject::tr(
-            "The number of columns in the saved mix-up columns keyframe \n"
-            "does not match the number of columns currently displayed.\n"
-            "The keyframe will be cleared."));
+            "The saved mix-up columns keyframes does not match the currently "
+            "displayed columns, "
+            "so the mix-up columns keyframes were automatically adjusted.\n"
+            "You may need to verify whether the adjustment was performed "
+            "correctly."));
   }
 }
 

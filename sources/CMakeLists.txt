@@ -1,5 +1,5 @@
 # Specify the minimum version of CMake 
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.10)
 
 # Specify the project name
 project(xdts_viewer VERSION 1.2.0)

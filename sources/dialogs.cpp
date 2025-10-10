@@ -49,6 +49,8 @@ SettingsDialog::SettingsDialog(QWidget* parent)
   m_mixUpColumnsCombo = new QComboBox(this);
   m_mixupKeyBtn       = new QPushButton(tr("Edit Mix-up Keys"), this);
   m_withDenpyoCB      = new QCheckBox(tr("Attach Composite Voucher"), this);
+  m_showSkippedDrawingsCB =
+      new QCheckBox(tr("Show Skipped Drawings Information"), this);
   m_backsideImgPathField = new QLineEdit(this);
   m_scannedGengaSheetGB  = new QGroupBox(
       tr("Scanned Genga Sheet Mode ( Hide Genga && Camera Area Lines )"));
@@ -138,7 +140,9 @@ SettingsDialog::SettingsDialog(QWidget* parent)
 
       formatLay->addWidget(m_withDenpyoCB, 4, 0, 1, 3);
 
-      formatLay->addWidget(new QLabel(tr("Backside Image:"), this), 5, 0,
+      formatLay->addWidget(m_showSkippedDrawingsCB, 5, 0, 1, 3);
+
+      formatLay->addWidget(new QLabel(tr("Backside Image:"), this), 6, 0,
                            Qt::AlignRight | Qt::AlignVCenter);
       QHBoxLayout* backsidePathLay = new QHBoxLayout();
       backsidePathLay->setMargin(0);
@@ -147,18 +151,18 @@ SettingsDialog::SettingsDialog(QWidget* parent)
         backsidePathLay->addWidget(m_backsideImgPathField, 1);
         backsidePathLay->addWidget(backsideBrowseButton, 0);
       }
-      formatLay->addLayout(backsidePathLay, 5, 1, 1, 2);
+      formatLay->addLayout(backsidePathLay, 6, 1, 1, 2);
 
-      formatLay->addWidget(new QLabel(tr("Output area:"), this), 6, 0,
+      formatLay->addWidget(new QLabel(tr("Output area:"), this), 7, 0,
                            Qt::AlignRight | Qt::AlignVCenter);
-      formatLay->addWidget(m_exportAreaCombo, 6, 1);
-      formatLay->addWidget(m_pageInfoLbl, 6, 2);
+      formatLay->addWidget(m_exportAreaCombo, 7, 1);
+      formatLay->addWidget(m_pageInfoLbl, 7, 2);
 
-      formatLay->addWidget(new QLabel(tr("Skipped Levels:"), this), 7, 0,
+      formatLay->addWidget(new QLabel(tr("Skipped Levels:"), this), 8, 0,
                            Qt::AlignRight | Qt::AlignVCenter);
-      formatLay->addWidget(m_skippedLevelNamesEdit, 7, 1, 1, 2);
+      formatLay->addWidget(m_skippedLevelNamesEdit, 8, 1, 1, 2);
 
-      formatLay->addWidget(m_scannedGengaSheetGB, 8, 0, 1, 3);
+      formatLay->addWidget(m_scannedGengaSheetGB, 9, 0, 1, 3);
       QGridLayout* scannedGengaLay = new QGridLayout();
       scannedGengaLay->setMargin(5);
       scannedGengaLay->setHorizontalSpacing(5);
@@ -185,7 +189,7 @@ SettingsDialog::SettingsDialog(QWidget* parent)
       m_scannedGengaSheetGB->setLayout(scannedGengaLay);
 
       // Overlap frame length
-      formatLay->addWidget(new QLabel(tr("Overlap At the Start:"), this), 9, 0,
+      formatLay->addWidget(new QLabel(tr("Overlap At the Start:"), this), 10, 0,
                            Qt::AlignRight | Qt::AlignVCenter);
       QHBoxLayout* startOlLay = new QHBoxLayout();
       startOlLay->setMargin(0);
@@ -197,9 +201,9 @@ SettingsDialog::SettingsDialog(QWidget* parent)
         startOlLay->addWidget(new QLabel(tr("k"), this), 0);
         startOlLay->addStretch(1);
       }
-      formatLay->addLayout(startOlLay, 9, 1, 1, 2);
+      formatLay->addLayout(startOlLay, 10, 1, 1, 2);
 
-      formatLay->addWidget(new QLabel(tr("Overlap At the End:"), this), 10, 0,
+      formatLay->addWidget(new QLabel(tr("Overlap At the End:"), this), 11, 0,
                            Qt::AlignRight | Qt::AlignVCenter);
       QHBoxLayout* endOlLay = new QHBoxLayout();
       endOlLay->setMargin(0);
@@ -211,7 +215,7 @@ SettingsDialog::SettingsDialog(QWidget* parent)
         endOlLay->addWidget(new QLabel(tr("k"), this), 0);
         endOlLay->addStretch(1);
       }
-      formatLay->addLayout(endOlLay, 10, 1, 1, 2);
+      formatLay->addLayout(endOlLay, 11, 1, 1, 2);
     }
     mainLay->addLayout(formatLay, 0);
 
@@ -232,6 +236,8 @@ SettingsDialog::SettingsDialog(QWidget* parent)
           SLOT(onLogoImgBrowserButtonClicked()));
   connect(m_withDenpyoCB, SIGNAL(clicked(bool)), this,
           SLOT(onDenpyoCheckboxClicked(bool)));
+  connect(m_showSkippedDrawingsCB, SIGNAL(clicked(bool)), this,
+          SLOT(onShowSkippedDrawingsClicked(bool)));
   connect(m_backsideImgPathField, SIGNAL(editingFinished()), this,
           SLOT(onFormatSettingsChanged()));
   connect(backsideBrowseButton, SIGNAL(clicked()), this,
@@ -272,6 +278,7 @@ void SettingsDialog::syncUIs() {
 
   m_logoImgPathField->setText(p->logoPath(true));
   m_withDenpyoCB->setChecked(p->withDenpyo());
+  m_showSkippedDrawingsCB->setChecked(p->showSkippedDrawingsInfo());
   m_backsideImgPathField->setText(p->backsideImgPath(true));
   m_exportAreaCombo->setCurrentIndex(
       m_exportAreaCombo->findData(p->exportArea()));
@@ -411,7 +418,6 @@ void SettingsDialog::onFormatSettingsChanged() {
   p->setSkippedLevelNames(m_skippedLevelNamesEdit->text());
   p->setIsScannedGengaSheet(m_scannedGengaSheetGB->isChecked());
   p->setScannedSheetPageAmount(m_scannedSheetPageAmountEdit->text().toInt());
-
   // OLがある場合はテンプレートから再計算（描画位置が変わることがあるため）
   if (MyParams::instance()->hasOverlap())
     MyParams::instance()->notifyTemplateSwitched();
@@ -425,6 +431,13 @@ void SettingsDialog::onDenpyoCheckboxClicked(bool on) {
   p->setWithDenpyo(on);
   m_backsideImgPathField->setText(p->backsideImgPath(true));
   MyParams::instance()->notifySomethingChanged();
+  MyParams::instance()->setFormatDirty(true);
+}
+
+void SettingsDialog::onShowSkippedDrawingsClicked(bool) {
+  MyParams::instance()->setShowSkippedDrawingsInfo(
+      m_showSkippedDrawingsCB->isChecked());
+  MyParams::instance()->notifyTemplateSwitched();
   MyParams::instance()->setFormatDirty(true);
 }
 

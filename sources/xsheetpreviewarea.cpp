@@ -1448,6 +1448,11 @@ XSheetPDFTemplate::XSheetPDFTemplate(
   else
     checkMixupColumnsKeyframes();
 
+  // 動画欠番を確認
+  if (MyParams::instance()
+          ->showSkippedDrawingsInfo())  // TODO: ONOFFできるように
+    checkSkippedDrawings();
+
   m_colLabelRects.insert(Area_Actions, QList<QList<QRect>>());
   m_colLabelRects.insert(Area_Cells, QList<QList<QRect>>());
   m_colLabelRects_bottom.insert(Area_Actions, QList<QList<QRect>>());
@@ -1898,12 +1903,25 @@ void XSheetPDFTemplate::drawXsheetContents(QPainter& painter, int framePage,
       if (!dateTime_scenePath.isEmpty()) dateTime_scenePath += "\n";
       dateTime_scenePath += m_info.scenePathText;
     }
+    // 動画欠番  ※ 1ページ目のみ
+    if (!m_skippedDrawingText.isEmpty() && framePage == 0) {
+      // 動画欄に表示があるとき
+      if (m_columns.keys().contains(Area_Cells) ||
+          (m_columns.keys()[0] == Area_Unspecified &&
+           m_info.exportAreas[0] == Area_Cells)) {
+        if (!dateTime_scenePath.isEmpty()) dateTime_scenePath += "\n";
+        dateTime_scenePath += m_skippedDrawingText;
+      }
+    }
     if (m_dataRects.contains(Data_DateTimeAndScenePath) &&
         !dateTime_scenePath.isEmpty()) {
+      painter.save();
+      QFont font(QString::fromLocal8Bit("BIZ UDPゴシック"));
       font.setPixelSize(m_p.bodylabelTextSize_Small);
       painter.setFont(font);
       painter.drawText(m_dataRects.value(Data_DateTimeAndScenePath),
                        Qt::AlignRight | Qt::AlignTop, dateTime_scenePath);
+      painter.restore();
     }
 
     // OL長を書き込む
@@ -2479,6 +2497,76 @@ void XSheetPDFTemplate::checkRepeatColumns() {
   }
 }
 //---------------------------------------------------------
+
+void XSheetPDFTemplate::checkSkippedDrawings() {
+  m_skippedDrawingText.clear();
+  for (auto area : m_columns.keys()) {
+    // 原画欄はスキップ
+    if (area == Area_Actions) continue;
+
+    ColumnsData columnsData = m_columns.value(area);
+    // セル名毎に、数字のフレームだけを集める
+    QMap<QString, QSet<int>> frameLists;
+    for (auto columnData : columnsData) {
+      QSet<int> frameNumbers;
+
+      for (auto frameData : columnData.cells) {
+        bool ok;
+        int frameNumber = frameData.frame.toInt(&ok);
+        if (ok) frameNumbers.insert(frameNumber);
+      }
+
+      if (frameNumbers.isEmpty()) continue;
+
+      // 新しいセル名の場合はリストを新たに登録
+      if (!frameLists.contains(columnData.name))
+        frameLists.insert(columnData.name, frameNumbers);
+      else
+        frameLists[columnData.name].unite(frameNumbers);
+    }
+
+    // 各セル名について
+    for (auto colName : frameLists.keys()) {
+      // 番号順にソート
+      QList<int> numbers = frameLists.value(colName).toList();
+      std::sort(numbers.begin(), numbers.end());
+      // 数字が1個以下ならcontinue
+      if (numbers.isEmpty()) continue;
+
+      QStringList skippedFrameChunks;
+      // 欠番を見つけてテキスト化。欠番の連番チャンクが3コマ以上のときは"～"でつなぐ
+      int prevNumber = 0;
+      for (int i = 0; i < numbers.size(); i++) {
+        int currentNumber = numbers[i];
+        // currentとprevの差が2以上の時
+        if (currentNumber - prevNumber > 1) {
+          if (currentNumber - prevNumber == 2)
+            skippedFrameChunks.append(QString::number(prevNumber + 1));
+          else if (currentNumber - prevNumber == 3) {
+            skippedFrameChunks.append(QString::number(prevNumber + 1));
+            skippedFrameChunks.append(QString::number(prevNumber + 2));
+          } else
+            skippedFrameChunks.append(
+                QObject::tr("%1-%2")
+                    .arg(QString::number(prevNumber + 1))
+                    .arg(QString::number(currentNumber - 1)));
+        }
+        prevNumber = currentNumber;
+      }
+
+      if (!skippedFrameChunks.isEmpty())
+        m_skippedDrawingText.append(
+            QString(" %1%2 ").arg(colName).arg(skippedFrameChunks.join(",")));
+    }
+
+    // 何か欠番が見つかったら、タイトルを入れる
+    if (!m_skippedDrawingText.isEmpty())
+      m_skippedDrawingText.prepend(QObject::tr("Skipped Frames:"));
+  }
+}
+
+//---------------------------------------------------------
+
 XSheetPDFTemplate_B4_6sec::XSheetPDFTemplate_B4_6sec(
     const QMap<ExportArea, ColumnsData>& columns, const int duration)
     : XSheetPDFTemplate(columns, duration) {

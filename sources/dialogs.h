@@ -24,6 +24,7 @@ class SettingsDialog : public QDialog {
   QComboBox* m_exportAreaCombo;
   QLineEdit* m_skippedLevelNamesEdit;
   QCheckBox* m_withDenpyoCB;
+  QCheckBox* m_showSkippedDrawingsCB;
   QLineEdit* m_backsideImgPathField;
   QGroupBox* m_scannedGengaSheetGB;
   QLineEdit* m_gengaLevelsCountEdit;
@@ -61,6 +62,7 @@ protected slots:
   void onStartOLComboChanged(int);
   void onEndOLComboChanged(int);
   void onDenpyoCheckboxClicked(bool);
+  void onShowSkippedDrawingsClicked(bool);
 };
 
 class PreferencesDialog : public QDialog {

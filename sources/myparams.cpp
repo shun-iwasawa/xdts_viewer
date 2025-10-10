@@ -86,6 +86,7 @@ MyParams::MyParams()
     , m_scannedSheetPageAmount(1)
     , m_startOverlapFrameLength(0)
     , m_endOverlapFrameLength(0)
+    , m_showSkippedDrawingsInfo(false)
     , m_currentColor(Qt::black)
     , m_exportLineColor(156, 200, 98)
 #ifdef MACOSX
@@ -249,6 +250,7 @@ void MyParams::resetValues() {
   m_scannedSheetPageAmount  = 1;
   m_startOverlapFrameLength = 0;
   m_endOverlapFrameLength   = 0;
+  m_showSkippedDrawingsInfo = false;
 
   if (QFileInfo(PathUtils::getDefaultFormatSettingsPath()).exists()) {
     QSettings settings(PathUtils::getDefaultFormatSettingsPath(),
@@ -295,6 +297,9 @@ void MyParams::resetValues() {
     m_endOverlapFrameLength =
         settings.value("EndOverlapFrameLength", m_endOverlapFrameLength)
             .toInt();
+    m_showSkippedDrawingsInfo =
+        settings.value("ShowSkippedDrawingsInfo", m_showSkippedDrawingsInfo)
+            .toBool();
     settings.endGroup();
     settings.beginGroup("ExportSettings");
     m_exportLineColor.setNamedColor(
@@ -430,6 +435,9 @@ bool MyParams::loadFormatSettingsIfExists() {
   m_startOverlapFrameLength =
       settings.value("StartOverlapFrameLength", 0).toInt();
   m_endOverlapFrameLength = settings.value("EndOverlapFrameLength", 0).toInt();
+  m_showSkippedDrawingsInfo =
+      settings.value("ShowSkippedDrawingsInfo", m_showSkippedDrawingsInfo)
+          .toBool();
 
   m_dyedCells.clear();
   keyAreaCount = settings.beginReadArray("DyedCells");
@@ -519,6 +527,7 @@ void MyParams::saveFormatSettings() {
   settings.setValue("ScannedSheetPageAmount", m_scannedSheetPageAmount);
   settings.setValue("StartOverlapFrameLength", m_startOverlapFrameLength);
   settings.setValue("EndOverlapFrameLength", m_endOverlapFrameLength);
+  settings.setValue("ShowSkippedDrawingsInfo", m_showSkippedDrawingsInfo);
 
   settings.remove("DyedCells");
   if (!m_dyedCells.isEmpty()) {

@@ -95,6 +95,8 @@ class MyParams : public QObject  // singleton
   int m_startOverlapFrameLength;
   int m_endOverlapFrameLength;
 
+  bool m_showSkippedDrawingsInfo;
+
   bool m_isFormatDirty;
 
   // preferences
@@ -238,6 +240,11 @@ public:
   bool hasOverlap() {
     return m_startOverlapFrameLength > 0 || m_endOverlapFrameLength < 0;
   }
+
+  void setShowSkippedDrawingsInfo(bool show) {
+    m_showSkippedDrawingsInfo = show;
+  }
+  bool showSkippedDrawingsInfo() { return m_showSkippedDrawingsInfo; }
 
   void setSkippedLevelNames(const QString& val) { m_skippedLevelNames = val; }
   QString skippedLevelNames() const { return m_skippedLevelNames; }

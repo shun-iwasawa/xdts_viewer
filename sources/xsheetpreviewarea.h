@@ -168,6 +168,8 @@ protected:
   // QMap<int,QList<RepeatInfo>> ¨ colId ‚²‚Æ‚ÌƒŠƒs[ƒgî•ñ
   QMap<ExportArea, QMap<int, QList<RepeatInfo>>> m_repeatColumns;
 
+  QString m_skippedDrawingText;
+
   int m_duration;
   int m_longestDuration;  // ˆê”Ô’·‚¢—ñ‚Ì’·‚³
   bool m_useExtraColumns;
@@ -259,6 +261,7 @@ public:
   void checkTerekoColumns();
   void checkMixupColumnsKeyframes();
   void checkRepeatColumns();
+  void checkSkippedDrawings();
 
   QSize getPixelSize();
 

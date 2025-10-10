@@ -38,17 +38,17 @@ Please turn off the &quot;Mix-up Columns&quot; checkbox in the Settings in order
 <context>
     <name>AboutDialog</name>
     <message>
-        <location filename="../dialogs.cpp" line="805"/>
+        <location filename="../dialogs.cpp" line="816"/>
         <source>About %1</source>
         <translation>%1 について</translation>
     </message>
     <message>
-        <location filename="../dialogs.cpp" line="809"/>
+        <location filename="../dialogs.cpp" line="820"/>
         <source>Built %1</source>
         <translation>ビルドした日 %1</translation>
     </message>
     <message>
-        <location filename="../dialogs.cpp" line="864"/>
+        <location filename="../dialogs.cpp" line="875"/>
         <source>Licenses</source>
         <translation>ライセンス表示</translation>
     </message>
@@ -114,51 +114,51 @@ Please turn off the &quot;Mix-up Columns&quot; checkbox in the Settings in order
 <context>
     <name>MyParams</name>
     <message>
-        <location filename="../myparams.cpp" line="599"/>
+        <location filename="../myparams.cpp" line="607"/>
         <source>Circle</source>
         <translation>丸</translation>
     </message>
     <message>
-        <location filename="../myparams.cpp" line="611"/>
+        <location filename="../myparams.cpp" line="619"/>
         <source>Triangle</source>
         <translation>三角</translation>
     </message>
     <message>
-        <location filename="../myparams.cpp" line="638"/>
+        <location filename="../myparams.cpp" line="646"/>
         <source>Approve</source>
         <translation>承認印</translation>
     </message>
     <message>
-        <location filename="../myparams.cpp" line="773"/>
+        <location filename="../myparams.cpp" line="781"/>
         <source>Save Empty XDTS File</source>
         <translation>空のXDTSファイルを保存する</translation>
     </message>
     <message>
-        <location filename="../myparams.cpp" line="775"/>
+        <location filename="../myparams.cpp" line="783"/>
         <source>XDTS Files (*.xdts)</source>
         <translation>XDTSファイル (*.xdts)</translation>
     </message>
     <message>
-        <location filename="../myparams.cpp" line="783"/>
+        <location filename="../myparams.cpp" line="791"/>
         <source>The file %1 already exists.
 </source>
         <translation>ファイル%1は既に存在します。
 </translation>
     </message>
     <message>
-        <location filename="../myparams.cpp" line="785"/>
+        <location filename="../myparams.cpp" line="793"/>
         <source>The folder %1 already exists.
 </source>
         <translation>フォルダ%1は既に存在します。
 </translation>
     </message>
     <message>
-        <location filename="../myparams.cpp" line="786"/>
+        <location filename="../myparams.cpp" line="794"/>
         <source>Do you want to overwrite it?</source>
         <translation>上書きしてよろしいですか？</translation>
     </message>
     <message>
-        <location filename="../myparams.cpp" line="789"/>
+        <location filename="../myparams.cpp" line="797"/>
         <source>Question</source>
         <translation>質問</translation>
     </message>
@@ -467,143 +467,143 @@ Do you want to save your changes?</source>
 <context>
     <name>PreferencesDialog</name>
     <message>
-        <location filename="../dialogs.cpp" line="486"/>
+        <location filename="../dialogs.cpp" line="497"/>
         <source>Preferences</source>
         <translation>環境設定</translation>
     </message>
     <message>
-        <location filename="../dialogs.cpp" line="499"/>
+        <location filename="../dialogs.cpp" line="510"/>
         <source>Put Serial Frame Numbers Over Pages</source>
         <translation>秒数、フレーム番号を通しで表示する</translation>
     </message>
     <message>
-        <location filename="../dialogs.cpp" line="501"/>
+        <location filename="../dialogs.cpp" line="512"/>
         <source>Print Level Names On The Bottom</source>
         <translation>レベル名をページ下部にも出力する</translation>
     </message>
     <message>
-        <location filename="../dialogs.cpp" line="503"/>
+        <location filename="../dialogs.cpp" line="514"/>
         <source>Capitalize the first letter of level name (ACTIONS area only)</source>
         <translation>セル名の1文字目を大文字にする（原画欄のみ）</translation>
     </message>
     <message>
-        <location filename="../dialogs.cpp" line="508"/>
+        <location filename="../dialogs.cpp" line="519"/>
         <source>Empty Frame for AE Keyframe Data:</source>
         <translation>AEタイムリマップの
 空コマ用のフレーム：</translation>
     </message>
     <message>
-        <location filename="../dialogs.cpp" line="517"/>
+        <location filename="../dialogs.cpp" line="528"/>
         <source>OK</source>
         <translation>OK</translation>
     </message>
     <message>
-        <location filename="../dialogs.cpp" line="525"/>
+        <location filename="../dialogs.cpp" line="536"/>
         <source>Always</source>
         <translation>常に描く</translation>
     </message>
     <message>
-        <location filename="../dialogs.cpp" line="526"/>
+        <location filename="../dialogs.cpp" line="537"/>
         <source>More Than 3 Continuous Cells</source>
         <translation>4コマ以上連続したコマに描く</translation>
     </message>
     <message>
-        <location filename="../dialogs.cpp" line="528"/>
+        <location filename="../dialogs.cpp" line="539"/>
         <source>None</source>
         <translation>常に描かない</translation>
     </message>
     <message>
-        <location filename="../dialogs.cpp" line="532"/>
+        <location filename="../dialogs.cpp" line="543"/>
         <source>When using &quot;Copy After Effects Keyframe Data To Clipboard&quot; tool,
 this value will be the frame number for empty cells.</source>
         <translation>「AEタイムリマップデータをクリップボードにコピー」ツールを使うとき、
 この値が空コマのフレーム番号として使用されます。</translation>
     </message>
     <message>
-        <location filename="../dialogs.cpp" line="548"/>
+        <location filename="../dialogs.cpp" line="559"/>
         <source>Language:</source>
         <translation>言語：</translation>
     </message>
     <message>
-        <location filename="../dialogs.cpp" line="553"/>
+        <location filename="../dialogs.cpp" line="564"/>
         <source>Line Color:</source>
         <translation>線の色：</translation>
     </message>
     <message>
-        <location filename="../dialogs.cpp" line="568"/>
+        <location filename="../dialogs.cpp" line="579"/>
         <source>Continuous Line:</source>
         <translation>連続コマの線：</translation>
     </message>
     <message>
-        <location filename="../dialogs.cpp" line="574"/>
+        <location filename="../dialogs.cpp" line="585"/>
         <source>Minimum Frame Length
 for &quot;REPEAT&quot; symbol:</source>
         <translation>「リピート」表示の
 最小繰り返し長さ：</translation>
     </message>
     <message>
-        <location filename="../dialogs.cpp" line="586"/>
+        <location filename="../dialogs.cpp" line="597"/>
         <source>User Stamps Folder:</source>
         <translation>ユーザースタンプフォルダ：</translation>
     </message>
     <message>
-        <location filename="../dialogs.cpp" line="597"/>
+        <location filename="../dialogs.cpp" line="608"/>
         <source>Approval Stamp Name:</source>
         <translation>承認印の名前：</translation>
     </message>
     <message>
-        <location filename="../dialogs.cpp" line="606"/>
+        <location filename="../dialogs.cpp" line="617"/>
         <source>File Suffixes</source>
         <translation>ファイル接尾辞</translation>
     </message>
     <message>
-        <location filename="../dialogs.cpp" line="612"/>
+        <location filename="../dialogs.cpp" line="623"/>
         <source>LO:</source>
         <translation>LO：</translation>
     </message>
     <message>
-        <location filename="../dialogs.cpp" line="615"/>
+        <location filename="../dialogs.cpp" line="626"/>
         <source>RoughGen:</source>
         <translation>ラフ原：</translation>
     </message>
     <message>
-        <location filename="../dialogs.cpp" line="618"/>
+        <location filename="../dialogs.cpp" line="629"/>
         <source>Genga:</source>
         <translation>原画：</translation>
     </message>
     <message>
-        <location filename="../dialogs.cpp" line="621"/>
+        <location filename="../dialogs.cpp" line="632"/>
         <source>Douga:</source>
         <translation>動画：</translation>
     </message>
     <message>
-        <location filename="../dialogs.cpp" line="713"/>
+        <location filename="../dialogs.cpp" line="724"/>
         <source>Language has been changed.</source>
         <translation>言語が変更されました。</translation>
     </message>
     <message>
-        <location filename="../dialogs.cpp" line="714"/>
+        <location filename="../dialogs.cpp" line="725"/>
         <source>Changes will take effect the next time you run XDTS Viewer.</source>
         <translation>変更は次回のXDTSViewer起動時に適用されます。</translation>
     </message>
     <message>
-        <location filename="../dialogs.cpp" line="741"/>
+        <location filename="../dialogs.cpp" line="752"/>
         <source>Specify User Stamp Folder</source>
         <translation>ユーザースタンプフォルダを指定して下さい</translation>
     </message>
     <message>
-        <location filename="../dialogs.cpp" line="756"/>
+        <location filename="../dialogs.cpp" line="767"/>
         <source>Stamp Folder Has Specified.</source>
         <translation>スタンプフォルダが指定されました。</translation>
     </message>
     <message>
-        <location filename="../dialogs.cpp" line="757"/>
-        <location filename="../dialogs.cpp" line="767"/>
+        <location filename="../dialogs.cpp" line="768"/>
+        <location filename="../dialogs.cpp" line="778"/>
         <source>The Change Will Be Applied When You Launch the Application Next Time.</source>
         <translation>変更は次回アプリケーション起動時に適用されます。</translation>
     </message>
     <message>
-        <location filename="../dialogs.cpp" line="766"/>
+        <location filename="../dialogs.cpp" line="777"/>
         <source>Approval Stamp Name Has Specified.</source>
         <translation>承認印の名前が設定されました。</translation>
     </message>
@@ -665,36 +665,46 @@ for &quot;REPEAT&quot; symbol:</source>
         <translation>カメラ</translation>
     </message>
     <message>
-        <location filename="../xsheetpreviewarea.cpp" line="1811"/>
+        <location filename="../xsheetpreviewarea.cpp" line="1815"/>
         <source>HOLD</source>
         <translation>止メ</translation>
     </message>
     <message>
-        <location filename="../xsheetpreviewarea.cpp" line="1811"/>
+        <location filename="../xsheetpreviewarea.cpp" line="1815"/>
         <source>REPEAT</source>
         <translation>リピ|ト</translation>
     </message>
     <message>
-        <location filename="../xsheetpreviewarea.cpp" line="1923"/>
+        <location filename="../xsheetpreviewarea.cpp" line="1937"/>
         <source>(Start OL %1+%2) </source>
         <translation>（前O.L. %1秒+%2コマ） </translation>
     </message>
     <message>
-        <location filename="../xsheetpreviewarea.cpp" line="1928"/>
+        <location filename="../xsheetpreviewarea.cpp" line="1942"/>
         <source> (End OL %1+%2)</source>
         <translation> （後O.L. %1秒+%2コマ）</translation>
     </message>
     <message>
-        <location filename="../xsheetpreviewarea.cpp" line="2320"/>
+        <location filename="../xsheetpreviewarea.cpp" line="2333"/>
         <source>Warning</source>
         <translation>警告</translation>
     </message>
     <message>
-        <location filename="../xsheetpreviewarea.cpp" line="2321"/>
+        <location filename="../xsheetpreviewarea.cpp" line="2334"/>
         <source>The saved mix-up columns keyframes does not match the currently displayed columns, so the mix-up columns keyframes were automatically adjusted.
 You may need to verify whether the adjustment was performed correctly.</source>
         <translation>保存されているテレコ列キーフレームが現在表示されている列と一致しないため、テレコキーフレームが自動的に調整されました。
 調整が正しく行われたかどうか、確認が必要かもしれません。</translation>
+    </message>
+    <message>
+        <location filename="../xsheetpreviewarea.cpp" line="2548"/>
+        <source>%1-%2</source>
+        <translation>%1～%2</translation>
+    </message>
+    <message>
+        <location filename="../xsheetpreviewarea.cpp" line="2559"/>
+        <source>Skipped Frames:</source>
+        <translation>動画欠番</translation>
     </message>
     <message>
         <source>The number of columns in the saved mix-up columns keyframe 
@@ -704,37 +714,37 @@ The keyframe will be cleared.</source>
 キーフレームはクリアされます。</translation>
     </message>
     <message>
-        <location filename="../xsheetpreviewarea.cpp" line="2511"/>
+        <location filename="../xsheetpreviewarea.cpp" line="2597"/>
         <source>EPISODE</source>
         <comment>XSheetPDF</comment>
         <translation>第&#x3000;&#x3000;話</translation>
     </message>
     <message>
-        <location filename="../xsheetpreviewarea.cpp" line="2512"/>
+        <location filename="../xsheetpreviewarea.cpp" line="2598"/>
         <source>SEQ.</source>
         <comment>XSheetPDF</comment>
         <translation>シーン</translation>
     </message>
     <message>
-        <location filename="../xsheetpreviewarea.cpp" line="2513"/>
+        <location filename="../xsheetpreviewarea.cpp" line="2599"/>
         <source>SCENE</source>
         <comment>XSheetPDF</comment>
         <translation>カット</translation>
     </message>
     <message>
-        <location filename="../xsheetpreviewarea.cpp" line="2514"/>
+        <location filename="../xsheetpreviewarea.cpp" line="2600"/>
         <source>TIME</source>
         <comment>XSheetPDF</comment>
         <translation>タイム</translation>
     </message>
     <message>
-        <location filename="../xsheetpreviewarea.cpp" line="2515"/>
+        <location filename="../xsheetpreviewarea.cpp" line="2601"/>
         <source>NAME</source>
         <comment>XSheetPDF</comment>
         <translation>原画</translation>
     </message>
     <message>
-        <location filename="../xsheetpreviewarea.cpp" line="2516"/>
+        <location filename="../xsheetpreviewarea.cpp" line="2602"/>
         <source>SHEET</source>
         <comment>XSheetPDF</comment>
         <translation>シート</translation>
@@ -779,17 +789,17 @@ The keyframe will be cleared.</source>
         <translation type="vanished">紙原画シートを使用 （原画欄の罫線を隠す）</translation>
     </message>
     <message>
-        <location filename="../dialogs.cpp" line="60"/>
+        <location filename="../dialogs.cpp" line="61"/>
         <source>OK</source>
         <translation>OK</translation>
     </message>
     <message>
-        <location filename="../dialogs.cpp" line="76"/>
+        <location filename="../dialogs.cpp" line="77"/>
         <source>ACTIONS</source>
         <translation>アクション</translation>
     </message>
     <message>
-        <location filename="../dialogs.cpp" line="77"/>
+        <location filename="../dialogs.cpp" line="78"/>
         <source>CELLS</source>
         <translation>セル</translation>
     </message>
@@ -804,52 +814,57 @@ The keyframe will be cleared.</source>
         <translation>キーフレームの編集</translation>
     </message>
     <message>
-        <location filename="../dialogs.cpp" line="54"/>
+        <location filename="../dialogs.cpp" line="52"/>
+        <source>Show Skipped Drawings Information</source>
+        <translation>動画欠番情報を表示する</translation>
+    </message>
+    <message>
+        <location filename="../dialogs.cpp" line="55"/>
         <source>Scanned Genga Sheet Mode ( Hide Genga &amp;&amp; Camera Area Lines )</source>
         <translation>紙原画シートを使用 （原画欄とカメラ欄の罫線を隠す）</translation>
     </message>
     <message>
-        <location filename="../dialogs.cpp" line="79"/>
+        <location filename="../dialogs.cpp" line="80"/>
         <source>Manually Specify Mix-up Keys</source>
         <translation>テレコ列キーフレームを手動で指定する</translation>
     </message>
     <message>
-        <location filename="../dialogs.cpp" line="81"/>
+        <location filename="../dialogs.cpp" line="82"/>
         <source>Automatically Detect from Data</source>
         <translation>XDTSデータからテレコ列を自動で判別する</translation>
     </message>
     <message>
-        <location filename="../dialogs.cpp" line="113"/>
+        <location filename="../dialogs.cpp" line="114"/>
         <source>Template:</source>
         <translation>テンプレート：</translation>
     </message>
     <message>
-        <location filename="../dialogs.cpp" line="121"/>
+        <location filename="../dialogs.cpp" line="122"/>
         <source>Mix-up Columns:</source>
         <translation>テレコ表示：</translation>
     </message>
     <message>
-        <location filename="../dialogs.cpp" line="128"/>
+        <location filename="../dialogs.cpp" line="129"/>
         <source>Logo Image:</source>
         <translation>ロゴ画像：</translation>
     </message>
     <message>
-        <location filename="../dialogs.cpp" line="141"/>
+        <location filename="../dialogs.cpp" line="144"/>
         <source>Backside Image:</source>
         <translation>シート裏面の画像：</translation>
     </message>
     <message>
-        <location filename="../dialogs.cpp" line="152"/>
+        <location filename="../dialogs.cpp" line="155"/>
         <source>Output area:</source>
         <translation>出力エリア：</translation>
     </message>
     <message>
-        <location filename="../dialogs.cpp" line="157"/>
+        <location filename="../dialogs.cpp" line="160"/>
         <source>Skipped Levels:</source>
         <translation>表示しないセル名：</translation>
     </message>
     <message>
-        <location filename="../dialogs.cpp" line="167"/>
+        <location filename="../dialogs.cpp" line="170"/>
         <source>Genga Levels Count:</source>
         <translation>原画セル数：</translation>
     </message>
@@ -858,64 +873,64 @@ The keyframe will be cleared.</source>
         <translation type="vanished">動画列のオフセット：</translation>
     </message>
     <message>
-        <location filename="../dialogs.cpp" line="172"/>
+        <location filename="../dialogs.cpp" line="175"/>
         <source>Page Amount:</source>
         <translation>ページ数：</translation>
     </message>
     <message>
-        <location filename="../dialogs.cpp" line="178"/>
+        <location filename="../dialogs.cpp" line="181"/>
         <source>Camera Column Addition:</source>
         <translation>カメラ列の追加：</translation>
     </message>
     <message>
-        <location filename="../dialogs.cpp" line="188"/>
+        <location filename="../dialogs.cpp" line="191"/>
         <source>Overlap At the Start:</source>
         <translation>カット頭 O.L.：</translation>
     </message>
     <message>
-        <location filename="../dialogs.cpp" line="195"/>
-        <location filename="../dialogs.cpp" line="209"/>
+        <location filename="../dialogs.cpp" line="198"/>
+        <location filename="../dialogs.cpp" line="212"/>
         <source>sec + </source>
         <translation>秒 + </translation>
     </message>
     <message>
-        <location filename="../dialogs.cpp" line="197"/>
-        <location filename="../dialogs.cpp" line="211"/>
+        <location filename="../dialogs.cpp" line="200"/>
+        <location filename="../dialogs.cpp" line="214"/>
         <source>k</source>
         <translation>コマ</translation>
     </message>
     <message>
-        <location filename="../dialogs.cpp" line="202"/>
+        <location filename="../dialogs.cpp" line="205"/>
         <source>Overlap At the End:</source>
         <translation>カット尻 O.L.：</translation>
     </message>
     <message>
-        <location filename="../dialogs.cpp" line="325"/>
-        <location filename="../dialogs.cpp" line="362"/>
-        <location filename="../dialogs.cpp" line="389"/>
+        <location filename="../dialogs.cpp" line="331"/>
+        <location filename="../dialogs.cpp" line="368"/>
+        <location filename="../dialogs.cpp" line="395"/>
         <source>Warning</source>
         <translation>警告</translation>
     </message>
     <message>
-        <location filename="../dialogs.cpp" line="325"/>
+        <location filename="../dialogs.cpp" line="331"/>
         <source>No columns found!</source>
         <translation>表示される列がありません！</translation>
     </message>
     <message>
-        <location filename="../dialogs.cpp" line="363"/>
-        <location filename="../dialogs.cpp" line="390"/>
+        <location filename="../dialogs.cpp" line="369"/>
+        <location filename="../dialogs.cpp" line="396"/>
         <source>Overlap length cannot be longer than XDTS duration.</source>
         <translation>O.L.の尺はXDTSのフレーム長より長くすることはできません。</translation>
     </message>
     <message>
-        <location filename="../dialogs.cpp" line="435"/>
-        <location filename="../dialogs.cpp" line="458"/>
+        <location filename="../dialogs.cpp" line="446"/>
+        <location filename="../dialogs.cpp" line="469"/>
         <source>Images</source>
         <translation>画像ファイル</translation>
     </message>
     <message>
-        <location filename="../dialogs.cpp" line="439"/>
-        <location filename="../dialogs.cpp" line="462"/>
+        <location filename="../dialogs.cpp" line="450"/>
+        <location filename="../dialogs.cpp" line="473"/>
         <source>Specify logo image file</source>
         <translation>ロゴ画像のファイルを指定して下さい</translation>
     </message>
@@ -923,7 +938,7 @@ The keyframe will be cleared.</source>
 <context>
     <name>XsheetPdfPreviewArea</name>
     <message>
-        <location filename="../xsheetpreviewarea.cpp" line="2919"/>
+        <location filename="../xsheetpreviewarea.cpp" line="3005"/>
         <source>Fit To Window</source>
         <translation>ウィンドウにフィット</translation>
     </message>

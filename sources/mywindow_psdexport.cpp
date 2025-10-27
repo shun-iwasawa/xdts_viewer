@@ -164,16 +164,23 @@ void MyWindow::onExportPSD(QString fileName) {
                MyParams::instance()->getScannedSheetPageAmount());
   int parallelPageCount = tmpl->parallelPageCount();
 
+  QSize pixelSize = tmpl->getPixelSize();
+
   int currentPage = (hasBackside) ? 0 : 1;
   for (int fpage = (hasBackside) ? -1 : 0; fpage < framePageCount; fpage++) {
     for (int ppage = 0; ppage < parallelPageCount; ppage++, currentPage++) {
       QString pageStr = QString::number(fpage + 1);
       if (parallelPageCount > 1 && fpage >= 0) pageStr += QChar('A' + ppage);
 
-      if (fpage == -1)
-        layers.append({pageStr + "_template",
-                       MyParams::instance()->backsidePixmap(true).toImage()});
-      else {
+      if (fpage == -1) {
+        QPixmap backPm(pixelSize);
+        backPm.fill(Qt::transparent);
+        QPainter painter(&backPm);
+        painter.drawPixmap(0, 0, MyParams::instance()->backsidePixmap(true));
+        painter.end();
+
+        layers.append({pageStr + "_template", backPm.toImage()});
+      } else {
         QPixmap tmplPm = tmpl->initializePreview();
         QPainter painter(&tmplPm);
         painter.setRenderHint(QPainter::Antialiasing);
@@ -189,8 +196,12 @@ void MyWindow::onExportPSD(QString fileName) {
         layers.append({pageStr + "_numbers", contentsPm.toImage()});
         painter.end();
       }
-      layers.append({pageStr + "_memo",
-                     MyParams::instance()->scribbleImage(currentPage)});
+      QPixmap memoPm(pixelSize);
+      memoPm.fill(Qt::transparent);
+      QPainter painter(&memoPm);
+      painter.drawImage(0, 0, MyParams::instance()->scribbleImage(currentPage));
+      painter.end();
+      layers.append({pageStr + "_memo", memoPm.toImage()});
 
       if (fpage == -1) {
         currentPage++;

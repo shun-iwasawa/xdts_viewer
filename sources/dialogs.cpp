@@ -531,6 +531,7 @@ PreferencesDialog::PreferencesDialog(QWidget* parent) : QDialog(parent) {
 
   m_languageCombo->addItem("English", "en");
   m_languageCombo->addItem(QString::fromLocal8Bit("“ú–{Œê"), "ja");
+  m_languageCombo->addItem(QString::fromLocal8Bit("¼òÌåÖÐÎÄ"), "zh_CN");
   m_lineColorButton->setFocusPolicy(Qt::NoFocus);
   stampBrowseButton->setFixedSize(20, 20);
   stampBrowseButton->setFocusPolicy(Qt::NoFocus);

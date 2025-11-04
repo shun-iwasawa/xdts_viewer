@@ -1727,14 +1727,16 @@ void XSheetPDFTemplate::drawXsheetContents(QPainter& painter, int framePage,
         }
         // cotinuous line
         else if (cell.frame.isEmpty()) {
+          /* テレコの先頭フレームで動画番号を表示していたが、表示しないことにした
           if (prevColumnIndex != oc &&
               prevCell.frame != XdtsFrameDataItem::SYMBOL_TICK_1 &&
               prevCell.frame != XdtsFrameDataItem::SYMBOL_TICK_2) {
             drawCellNumber(painter, m_cellRects[dispArea][oc][r], prevCell,
                            (prevColumnIndex != oc) ? columnName : "");
-          } else if (continuousLineStartFrame >= 0 &&
-                     (dispArea == Area_Cells ||
-                      f - continuousLineStartFrame < maximumClLength))
+          } else */
+          if (continuousLineStartFrame >= 0 &&
+              (dispArea == Area_Cells ||
+               f - continuousLineStartFrame < maximumClLength))
             drawContinuousLine(painter, m_cellRects[dispArea][oc][r],
                                cells.at(continuousLineStartFrame).frame ==
                                    XdtsFrameDataItem::SYMBOL_NULL_CELL);
@@ -1753,6 +1755,7 @@ void XSheetPDFTemplate::drawXsheetContents(QPainter& painter, int framePage,
                          m_info.tick2MarkType,
                          (topColumnIndex != oc) ? columnName : "");
           continuousLineStartFrame = checkContinuous(cells, f, r);
+          prevCell                 = cell;
         }
         // draw cell
         else {

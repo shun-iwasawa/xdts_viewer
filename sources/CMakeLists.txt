@@ -115,7 +115,7 @@ endif()
 
 if(WITH_TRANSLATION)
     # generate Qt translations and messages
-    set(LANGUAGES ja)
+    set(LANGUAGES ja zh_CN)
     # 翻訳対象のファイルを設定する。
     SET(TRANSLATION_TARGET_FILES
         ${HEADERS}

@@ -94,7 +94,8 @@ MyWindow::MyWindow()
   QToolBar* toolBar = new QToolBar(this);
   toolBar->setFloatable(false);
   toolBar->setMovable(false);
-  toolBar->setFixedHeight(35);
+  toolBar->setIconSize(QSize(24, 24));
+  toolBar->setStyleSheet("QToolButton{padding: 1px;}");
 
   QAction* loadAct =
       toolBar->addAction(QIcon(":Resources/load.svg"), tr("Load (Ctrl+O)"));

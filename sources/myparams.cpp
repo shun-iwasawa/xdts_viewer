@@ -634,7 +634,8 @@ void MyParams::registerDefaultStamps() {
   p.setFont(QFont("Meiryo", 25));
   p.drawText(QRectF(0, 23, 120, 37), Qt::AlignCenter,
              QDate::currentDate().toString("MM/dd"));
-  p.setFont(QFont(QString::fromLocal8Bit("UD デジタル 教科書体 NK-B"), 27));
+  p.setFont(QFont(QString::fromLocal8Bit("UD デジタル 教科書体 NK"), 27,
+                  QFont::Bold));
   QString name = MyParams::instance()->approvalName();
   QFontMetrics fm(p.font());
   int w         = fm.horizontalAdvance(name);

@@ -1,4 +1,4 @@
-#include "dialogs.h"
+ï»¿#include "dialogs.h"
 #include "myparams.h"
 #include "pathutils.h"
 
@@ -363,7 +363,7 @@ void SettingsDialog::onStartOLComboChanged(int) {
 
   if (newOLFrameLength == oldOLFrameLength) return;
 
-  // OL’·‚ÍXDTS‚ÌÚ‚ğ’´‚¦‚ç‚ê‚È‚¢
+  // OLé•·ã¯XDTSã®å°ºã‚’è¶…ãˆã‚‰ã‚Œãªã„
   if (newOLFrameLength > m_duration) {
     QMessageBox::warning(
         this, tr("Warning"),
@@ -390,7 +390,7 @@ void SettingsDialog::onEndOLComboChanged(int) {
 
   if (newOLFrameLength == oldOLFrameLength) return;
 
-  // OL’·‚ÍXDTS‚ÌÚ‚ğ’´‚¦‚ç‚ê‚È‚¢
+  // OLé•·ã¯XDTSã®å°ºã‚’è¶…ãˆã‚‰ã‚Œãªã„
   if (newOLFrameLength > m_duration) {
     QMessageBox::warning(
         this, tr("Warning"),
@@ -418,7 +418,7 @@ void SettingsDialog::onFormatSettingsChanged() {
   p->setSkippedLevelNames(m_skippedLevelNamesEdit->text());
   p->setIsScannedGengaSheet(m_scannedGengaSheetGB->isChecked());
   p->setScannedSheetPageAmount(m_scannedSheetPageAmountEdit->text().toInt());
-  // OL‚ª‚ ‚éê‡‚Íƒeƒ“ƒvƒŒ[ƒg‚©‚çÄŒvZi•`‰æˆÊ’u‚ª•Ï‚í‚é‚±‚Æ‚ª‚ ‚é‚½‚ßj
+  // OLãŒã‚ã‚‹å ´åˆã¯ãƒ†ãƒ³ãƒ—ãƒ¬ãƒ¼ãƒˆã‹ã‚‰å†è¨ˆç®—ï¼ˆæç”»ä½ç½®ãŒå¤‰ã‚ã‚‹ã“ã¨ãŒã‚ã‚‹ãŸã‚ï¼‰
   if (MyParams::instance()->hasOverlap())
     MyParams::instance()->notifyTemplateSwitched();
   else
@@ -530,8 +530,8 @@ PreferencesDialog::PreferencesDialog(QWidget* parent) : QDialog(parent) {
   QPushButton* closeButton = new QPushButton(tr("OK"), this);
 
   m_languageCombo->addItem("English", "en");
-  m_languageCombo->addItem(QString::fromLocal8Bit("“ú–{Œê"), "ja");
-  m_languageCombo->addItem(QString::fromLocal8Bit("¼òÌåÖĞÎÄ"), "zh_CN");
+  m_languageCombo->addItem(QString::fromLocal8Bit("æ—¥æœ¬èª"), "ja");
+  m_languageCombo->addItem(QString::fromUtf8(u8"ç®€ä½“ä¸­æ–‡"), "zh_CN");
   m_lineColorButton->setFocusPolicy(Qt::NoFocus);
   stampBrowseButton->setFixedSize(20, 20);
   stampBrowseButton->setFocusPolicy(Qt::NoFocus);
@@ -541,7 +541,7 @@ PreferencesDialog::PreferencesDialog(QWidget* parent) : QDialog(parent) {
                                  Line_MoreThan3s);
   m_continuousLineCombo->addItem(tr("None"), Line_None);
   m_minimumRepeatLengthField->setValidator(new QIntValidator(2, 999));
-  // ƒ^ƒCƒ€ƒŠƒ}ƒbƒv‚Í•‰’l‚Í0‚Æ‚µ‚Äˆµ‚í‚ê‚é
+  // ã‚¿ã‚¤ãƒ ãƒªãƒãƒƒãƒ—ã¯è² å€¤ã¯0ã¨ã—ã¦æ‰±ã‚ã‚Œã‚‹
   QString aeFieldToolTip =
       tr("When using \"Copy After Effects Keyframe Data To Clipboard\" "
          "tool,\nthis value will be the frame number for empty cells.");
@@ -727,7 +727,7 @@ void PreferencesDialog::onLanguageSwitched() {
       this, tr("Language has been changed."),
       tr("Changes will take effect the next time you run XDTS Viewer."));
   p->setLanguage(
-      m_languageCombo->currentData().toString());  // en / ja ‚ª“Š‚°‚ç‚ê‚é
+      m_languageCombo->currentData().toString());  // en / ja ãŒæŠ•ã’ã‚‰ã‚Œã‚‹
 }
 
 void PreferencesDialog::onViewPreferencesChanged() {
@@ -786,7 +786,7 @@ void PreferencesDialog::onEmptyFrameForAEChanged() {
   int newVal = m_emptyFrameForAEField->text().toInt();
   if (newVal == MyParams::instance()->emptyFrameForAE()) return;
   MyParams::instance()->setEmptyFrameForAE(newVal);
-  // “Á‚É‰æ–Ê‚É•Ï‰»‚Í‚È‚¢
+  // ç‰¹ã«ç”»é¢ã«å¤‰åŒ–ã¯ãªã„
 }
 
 void PreferencesDialog::onLineColorChanged(const QColor& color) {

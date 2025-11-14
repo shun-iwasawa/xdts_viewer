@@ -132,10 +132,6 @@ void MyParams::initialize() {
 
   loadUserSettingsIfExists();
 
-  // マイスタンプの登録ここでやる
-  registerDefaultStamps();
-  loadUserStamps();
-
   QPixmap pm(5, 5);
   pm.fill(Qt::transparent);
   QPainter p(&pm);

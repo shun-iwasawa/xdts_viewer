@@ -38,6 +38,7 @@ int main(int argc, char* argv[]) {
       a.installTranslator(&tra);
     }
   }
+  MyParams::instance()->initStamps();
 
 #ifndef __MACOS__
   QWindowsWindowFunctions::setWinTabEnabled(true);

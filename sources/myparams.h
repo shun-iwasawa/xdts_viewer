@@ -153,6 +153,11 @@ public:
 
   // to be called just after instancing the application
   void initialize();
+  void initStamps() {
+    // マイスタンプの登録ここでやる
+    registerDefaultStamps();
+    loadUserStamps();
+  }
 
   QString createdVersion() const { return m_createdVersion; }
 

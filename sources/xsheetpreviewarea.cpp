@@ -1150,16 +1150,9 @@ void XSheetPDFTemplate::drawCellNumber(QPainter& painter, QRect rect,
       painter.restore();
     }
 
-    if (!terekoColName.isEmpty()) {
-      painter.save();
-      QFont font = painter.font();
-      font.setPixelSize(param(RowHeight) / 3);
-      QRect terekoRect = QFontMetrics(font).boundingRect(terekoColName);
-      painter.setFont(font);
-      painter.setPen(Qt::blue);
-      painter.drawText(rect.topLeft() - terekoRect.topLeft(), terekoColName);
-      painter.restore();
-    }
+    if (!terekoColName.isEmpty())
+      drawTerekoColumnLabel(painter, rect, terekoColName);
+
     /*if (isKey) {
       QPen keep(painter.pen());
       QPen circlePen(keep);
@@ -1183,16 +1176,21 @@ void XSheetPDFTemplate::drawTickMark(QPainter& painter, QRect rect,
   painter.drawPixmap(tickR,
                      tickMarkPm(type, rect.height(), painter.pen().color()));
 
-  if (!terekoColName.isEmpty()) {
-    painter.save();
-    QFont font = painter.font();
-    font.setPixelSize(param(RowHeight) / 3);
-    QRect terekoRect = QFontMetrics(font).boundingRect(terekoColName);
-    painter.setFont(font);
-    painter.setPen(Qt::blue);
-    painter.drawText(rect.topLeft() - terekoRect.topLeft(), terekoColName);
-    painter.restore();
-  }
+  if (!terekoColName.isEmpty())
+    drawTerekoColumnLabel(painter, rect, terekoColName);
+}
+
+void XSheetPDFTemplate::drawTerekoColumnLabel(QPainter& painter,
+                                              const QRect rect,
+                                              const QString terekoColName) {
+  painter.save();
+  QFont font = painter.font();
+  font.setPixelSize(param(RowHeight) / 3);
+  QRect terekoRect = QFontMetrics(font).boundingRect(terekoColName);
+  painter.setFont(font);
+  painter.setPen(Qt::blue);
+  painter.drawText(rect.topLeft() - terekoRect.topLeft(), terekoColName);
+  painter.restore();
 }
 
 void XSheetPDFTemplate::drawEndMark(QPainter& painter, QRect upperRect) {
@@ -1724,16 +1722,14 @@ void XSheetPDFTemplate::drawXsheetContents(QPainter& painter, int framePage,
           if (currentRepeatType == Repeat &&
               f - currentRepeatStartFrame < maximumClLength)
             drawRepeatLine(painter, m_cellRects[dispArea][oc][r]);
+
+          // テレコの先頭フレームの場合は列名を表示する
+          if (prevColumnIndex != oc)
+            drawTerekoColumnLabel(painter, m_cellRects[dispArea][oc][r],
+                                  columnName);
         }
         // cotinuous line
         else if (cell.frame.isEmpty()) {
-          /* テレコの先頭フレームで動画番号を表示していたが、表示しないことにした
-          if (prevColumnIndex != oc &&
-              prevCell.frame != XdtsFrameDataItem::SYMBOL_TICK_1 &&
-              prevCell.frame != XdtsFrameDataItem::SYMBOL_TICK_2) {
-            drawCellNumber(painter, m_cellRects[dispArea][oc][r], prevCell,
-                           (prevColumnIndex != oc) ? columnName : "");
-          } else */
           if (continuousLineStartFrame >= 0 &&
               (dispArea == Area_Cells ||
                f - continuousLineStartFrame < maximumClLength))
@@ -1742,6 +1738,11 @@ void XSheetPDFTemplate::drawXsheetContents(QPainter& painter, int framePage,
                                    XdtsFrameDataItem::SYMBOL_NULL_CELL);
           else {
           }  // 原画欄で継続線がmaximumClLengthより先には何も描かない
+
+          // テレコの先頭フレームの場合は列名を表示する
+          if (prevColumnIndex != oc)
+            drawTerekoColumnLabel(painter, m_cellRects[dispArea][oc][r],
+                                  columnName);
         }
         // draw tick mark
         else if (cell.frame == XdtsFrameDataItem::SYMBOL_TICK_1 ||

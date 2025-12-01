@@ -204,6 +204,9 @@ protected:
 
   void addInfo(int w, QString lbl, DecoFunc f = nullptr);
 
+  void drawTerekoColumnLabel(QPainter& painter, const QRect rect,
+                             const QString terekoColName);
+
   void drawContinuousLine(QPainter& painter, QRect rect, bool isEmpty);
   void drawRepeatLine(QPainter& painter, QRect rect);
   void drawCellNumber(QPainter& painter, QRect rect, FrameData& cellFdata,

@@ -1,6 +1,7 @@
 #include "pathutils.h"
 
 #include <QDir>
+#include <QFileInfo>
 #include <QStandardPaths>
 #include <QCoreApplication>
 
@@ -35,4 +36,22 @@ QString getProjectRoot() {
 QString getLicenseFolderPath() { return getResourceDirPath() + "/LICENSE"; }
 
 QString getTranslationFolderPath() { return getResourceDirPath() + "/loc"; }
+
+// Falls back to a cleaned absolute path when the file doesn't exist yet, and
+// folds case on Windows (NTFS is case-insensitive).
+// ファイルがまだ存在しない場合は絶対パスをクリーンアップした値にフォールバックし、
+// Windows では大文字小文字を無視する（NTFSは大文字小文字を区別しないため）。
+QString canonicalizePath(const QString& path) {
+  if (path.isEmpty()) return QString();
+
+  QString canonical = QFileInfo(path).canonicalFilePath();
+  if (canonical.isEmpty())
+    canonical = QDir::cleanPath(QFileInfo(path).absoluteFilePath());
+
+#ifndef __MACOS__
+  canonical = canonical.toLower();
+#endif
+
+  return canonical;
+}
 }  // namespace PathUtils

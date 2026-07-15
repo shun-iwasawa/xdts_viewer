@@ -43,6 +43,12 @@ class MyWindow : public QMainWindow {
 
   QAction* m_currentColorAction;
 
+  // Re-reads the XDTS timing data only, leaving hand-drawn overlays / undo
+  // history / format settings untouched. Used by reloadAndActivate().
+  // 手描きオーバーレイ・Undo履歴・フォーマット設定はそのままに、XDTSの
+  // タイミングデータのみ再読み込みする。reloadAndActivate() から呼ばれる。
+  void reloadXdtsDataOnly();
+
 public:
   MyWindow();
   ~MyWindow();
@@ -50,6 +56,14 @@ public:
   bool askAndSaveChanges();
   void setPage(int page);
   int duration();
+
+  // Requested by InstanceManager when another launch asks to open the file
+  // that is already open in this window: reloads the XDTS data (preserving
+  // unsaved hand-drawn edits) and brings the window to the foreground.
+  // 別プロセスの起動が、このウィンドウで既に開いているファイルを開こうとした
+  // 際にInstanceManagerから呼ばれる。XDTSデータを再読み込みし（未保存の手描き
+  // データは保持したまま）、ウィンドウを前面化する。
+  void reloadAndActivate();
 
 protected:
   void closeEvent(QCloseEvent* event) override;

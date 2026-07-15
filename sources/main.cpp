@@ -1,6 +1,7 @@
 #include "mywindow.h"
 #include "myparams.h"
 #include "pathutils.h"
+#include "instancemanager.h"
 
 #include <iostream>
 
@@ -26,6 +27,22 @@ int main(int argc, char* argv[]) {
   a.setAttribute(Qt::AA_CompressHighFrequencyEvents);
   a.setAttribute(Qt::AA_CompressTabletEvents);
 
+  // Single-instance / multi-window coordination. Use QApplication::arguments()
+  // (not raw argv) so non-ASCII paths survive on Windows. A Forwarded process
+  // has already handed its request to the running mothership and must exit
+  // without doing any of the setup below; a Mothership process never shows a
+  // window and just serves IPC requests until every worker window has closed.
+  // 単一起動・マルチウィンドウの調整。非ASCIIパスがWindowsで壊れないよう、
+  // 生のargvではなくQApplication::arguments()を使う。Forwarded(転送済み)の
+  // 場合は既に稼働中の母艦へ要求を渡し終えているため、以下の初期化を一切
+  // 行わずに終了する。Mothership(母艦)の場合はウィンドウを表示せず、全ての
+  // ワーカーウィンドウが閉じるまでIPC要求を処理し続ける。
+  QString initialPath;
+  InstanceManager::Role role =
+      InstanceManager::instance()->bootstrap(a.arguments(), initialPath);
+  if (role == InstanceManager::Role::Forwarded) return 0;
+  if (role == InstanceManager::Role::Mothership) return a.exec();
+
   MyParams::instance()->initialize();
 
   QTranslator tra;
@@ -44,11 +61,19 @@ int main(int argc, char* argv[]) {
   QWindowsWindowFunctions::setWinTabEnabled(true);
 #endif
 
-  if (argc > 1) {
-    QString initialPath = QString::fromLocal8Bit(argv[1]);
+  if (!initialPath.isEmpty())
     MyParams::instance()->setCurrentXdtsPath(initialPath);
-  }
   MyWindow w;
+
+  // Worker windows receive reload/activate pushes from the mothership when
+  // another launch requests the file already open in this window.
+  // ワーカーウィンドウは、別の起動がこのウィンドウで既に開いているファイル
+  // を要求した際、母艦からの再読み込み・前面化の指示を受け取る。
+  if (role == InstanceManager::Role::Worker) {
+    QObject::connect(InstanceManager::instance(),
+                     &InstanceManager::reloadAndActivateRequested, &w,
+                     &MyWindow::reloadAndActivate);
+  }
 
   QRect geometry = MyParams::instance()->loadWindowGeometry();
   if (!geometry.isNull()) {

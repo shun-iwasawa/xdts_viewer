@@ -6,6 +6,10 @@
 #include "tool.h"
 #include "commandmanager.h"
 #include "dialogs.h"
+#include "instancemanager.h"
+#ifdef WIN32
+#include <windows.h>
+#endif
 
 #include <iostream>
 #include <QPushButton>
@@ -860,6 +864,19 @@ void MyWindow::onLoad(const QString& xdtsPath) {
   }
   if (!currentXdtsPath.isEmpty())
     MyParams::instance()->setCurrentXdtsPath(currentXdtsPath);
+  // Keep the mothership process's open-file registry in sync with this
+  // window (File > Open / drag & drop may switch to a different file).
+  // 母艦プロセスの開いているファイル一覧をこのウィンドウと同期させる
+  // （File > Open
+  // やドラッグ＆ドロップで別ファイルに切り替わる場合があるため）。 Both paths
+  // of a paired genga/douga sheet are sent, since setCurrentXdtsPath() may have
+  // resolved a counterpart file into exposeAreas().
+  // 原画欄／動画欄のペアシートを開いている場合は、setCurrentXdtsPath()が
+  // 解決した相方のパスも含めて両方送る。
+  QStringList openXdtsPaths;
+  for (auto areaId : MyParams::instance()->exposeAreas())
+    openXdtsPaths << MyParams::instance()->currentXdtsPath(areaId);
+  InstanceManager::instance()->notifyPathChanged(openXdtsPaths);
 
   // 手描き画像のリセット
   m_previewPane->setScribbleImage(QImage());
@@ -1207,4 +1224,88 @@ void MyWindow::onBacksideImgPathChanged() {
 void MyWindow::onAbout() {
   static AboutDialog aboutDialog(this);
   aboutDialog.exec();
+}
+
+// Re-reads the XDTS timing data (m_data / m_columns / m_durations) only.
+// Unlike onLoad(), this deliberately skips askAndSaveChanges(), the
+// hand-drawn overlay reset, MyParams::resetValues(), and format settings
+// reload, so unsaved hand-drawn edits and undo history survive the reload.
+// XDTSのタイミングデータ（m_data / m_columns /
+// m_durations）のみ再読み込みする。
+// onLoad()と異なり、askAndSaveChanges()・手描きオーバーレイのリセット・
+// MyParams::resetValues()・フォーマット設定の再読み込みは意図的に行わない。
+// これにより、未保存の手描き編集とUndo履歴は再読み込み後も保持される。
+void MyWindow::reloadXdtsDataOnly() {
+  m_columns.clear();
+  m_durations.clear();
+
+  QList<ExportArea> areaIds = MyParams::instance()->exposeAreas();
+  for (auto areaId : areaIds) {
+    if (m_data) delete m_data;
+    m_data = new XdtsData();
+
+    QString path = MyParams::instance()->currentXdtsPath(areaId);
+
+    bool ok = loadXdtsScene(m_data, path);
+    if (!ok) {
+      QMessageBox::critical(this, tr("Error"),
+                            tr("%1 is not a valid XDTS file.").arg(path));
+      continue;
+    }
+
+    if (m_data->isEmpty() || m_data->timeTable().isEmpty()) continue;
+
+    XdtsTimeTableFieldItem cellField   = m_data->timeTable().getCellField();
+    XdtsTimeTableHeaderItem cellHeader = m_data->timeTable().getCellHeader();
+    int tmpDuration                    = m_data->timeTable().getDuration();
+    m_durations.insert(areaId, tmpDuration);
+    QStringList layerNames = cellHeader.getLayerNames();
+    QList<int> columns     = cellField.getOccupiedColumns();
+
+    ColumnsData data;
+    for (int column : columns) {
+      QString levelName = layerNames.at(column);
+      QList<int> tick1, tick2;
+      bool isHoldFrame = false;
+      QVector<FrameData> track =
+          cellField.getColumnTrack(column, tick1, tick2, isHoldFrame);
+      for (int i = track.size(); i < std::max(duration(), tmpDuration); i++) {
+        track.append({QString(), FrameOption_None});
+        isHoldFrame = false;
+      }
+      data.append({track, levelName, isHoldFrame});
+    }
+
+    m_columns.insert(areaId, data);
+  }
+
+  m_settingsDialog->setDuration(duration());
+  initTemplate();
+  updateTitleBar();
+}
+
+// Brings this window to the foreground after InstanceManager notifies it
+// that another launch requested the file already open here.
+// 別の起動がこのウィンドウで既に開いているファイルを要求したことを
+// InstanceManagerが通知してきた際に、このウィンドウを前面化する。
+void MyWindow::reloadAndActivate() {
+  reloadXdtsDataOnly();
+
+  if (isMinimized()) showNormal();
+#ifdef WIN32
+  // activateWindow() alone (SetForegroundWindow) is blocked by Windows'
+  // foreground-lock when this process isn't the active one; the taskbar
+  // button just flashes instead. Toggling the native HWND topmost flag is
+  // a Z-order change, not a foreground-steal request, so it isn't subject
+  // to that restriction.
+  // activateWindow()単体（内部でSetForegroundWindowを呼ぶ）は、このプロセスが
+  // アクティブでない場合Windowsのフォアグラウンドロックで拒否され、タスクバー
+  // アイコンが点滅するだけになる。ネイティブHWNDの最前面フラグの切り替えは
+  // フォアグラウンド奪取ではなくZ順序の変更なので、この制限を受けない。
+  HWND hwnd = reinterpret_cast<HWND>(winId());
+  SetWindowPos(hwnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
+  SetWindowPos(hwnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
+#endif
+  raise();
+  activateWindow();
 }

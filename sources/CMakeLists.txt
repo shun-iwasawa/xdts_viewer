@@ -13,6 +13,7 @@ set(MOC_HEADERS
     aetool.h
     dyetool.h
     mixupkeydialog.h
+    instancemanager.h
     )
 
 set(HEADERS
@@ -38,6 +39,7 @@ set(SOURCES
     aetool.cpp
     dyetool.cpp
     mixupkeydialog.cpp
+    instancemanager.cpp
 )
 
 #-----------------------------------------------------------------------------
@@ -85,10 +87,14 @@ if(BUILD_ENV_APPLE)
     set(CMAKE_OSX_DEPLOYMENT_TARGET 10.10)
 endif()
 
-# Add Qt libraries. QtCore and QtGui libraries will be 
-# added accordingly as the Widgets depends on them. 
+# Add Qt libraries. QtCore and QtGui libraries will be
+# added accordingly as the Widgets depends on them.
+# Network is required for QLocalServer/QLocalSocket, used by InstanceManager
+# for single-instance IPC (Network は QLocalServer/QLocalSocket に必要。
+# InstanceManagerの単一起動IPCで使用する)。
 find_package( Qt5 REQUIRED
     Widgets
+    Network
     LinguistTools
 )
 
@@ -157,9 +163,9 @@ endif()
 
 # link Qt library. Core and Gui will be linked accordingly
 if(BUILD_ENV_MSVC)
-    target_link_libraries(${PROJECT_NAME} Qt5::Widgets ${PSD_SDK_LIB} )
+    target_link_libraries(${PROJECT_NAME} Qt5::Widgets Qt5::Network ${PSD_SDK_LIB} )
 else()
-    target_link_libraries(${PROJECT_NAME} Qt5::Widgets)
+    target_link_libraries(${PROJECT_NAME} Qt5::Widgets Qt5::Network)
 endif()
 
 add_definitions(

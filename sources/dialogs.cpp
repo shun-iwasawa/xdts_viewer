@@ -11,6 +11,7 @@
 #include <QLabel>
 #include <QGridLayout>
 #include <QHBoxLayout>
+#include <QVBoxLayout>
 #include <QGroupBox>
 #include <QColorDialog>
 #include <QFontComboBox>
@@ -19,9 +20,12 @@
 #include <QMessageBox>
 #include <QImageReader>
 #include <QFileDialog>
+#include <QFileInfo>
 #include <QDir>
 #include <QPainter>
 #include <QTextEdit>
+#include <QRadioButton>
+#include <QButtonGroup>
 
 namespace {
 void frame2SecKoma(int frame, int& sec, int& koma) {
@@ -818,6 +822,106 @@ void PreferencesDialog::onSuffixEdited() {
   if (newSuffix == MyParams::instance()->suffix(type)) return;
 
   MyParams::instance()->setSuffix(type, newSuffix);
+}
+
+//-----------------------------------------------------------------------------
+
+CspLinkChooserDialog::CspLinkChooserDialog(const QStringList& openPaths,
+                                           QWidget* parent)
+    : QDialog(parent)
+    , m_useOpenRadio(nullptr)
+    , m_openFilesCombo(nullptr)
+    , m_needsOverwriteConfirm(false) {
+  setWindowTitle(tr("Sync Clip Studio Paint Timesheet"));
+
+  QVBoxLayout* layout = new QVBoxLayout();
+  layout->addWidget(new QLabel(
+      tr("Choose how to sync the Clip Studio Paint export with XDTS Viewer."),
+      this));
+
+  QButtonGroup* group = new QButtonGroup(this);
+
+  // Only offered when at least one window is already open.
+  // 既に開いているウィンドウが1つ以上ある場合のみ提示する。
+  if (!openPaths.isEmpty()) {
+    m_useOpenRadio =
+        new QRadioButton(tr("Sync with an already-open file:"), this);
+    group->addButton(m_useOpenRadio);
+    layout->addWidget(m_useOpenRadio);
+
+    m_openFilesCombo = new QComboBox(this);
+    for (const QString& path : openPaths)
+      m_openFilesCombo->addItem(QFileInfo(path).fileName(), path);
+    layout->addWidget(m_openFilesCombo);
+
+    m_useOpenRadio->setChecked(true);
+  }
+
+  // A single field covers both "sync with a different existing file" and
+  // "export as a new file": which one applies is decided in onAccept() from
+  // whether the entered path exists on disk, not from how it was entered.
+  // 「別の既存ファイルと同期」と「新規ファイルとしてエクスポート」を単一の
+  // フィールドにまとめる。どちらになるかはonAccept()で入力パスがディスク上
+  // に実在するかどうかから判定し、入力方法では区別しない。
+  m_useFileRadio = new QRadioButton(
+      tr("Sync with an existing file, or export as a new file:"), this);
+  group->addButton(m_useFileRadio);
+  layout->addWidget(m_useFileRadio);
+  {
+    QHBoxLayout* row = new QHBoxLayout();
+    m_filePathField  = new QLineEdit(this);
+    m_filePathField->setReadOnly(true);
+    QPushButton* browseBtn = new QPushButton("...", this);
+    row->addWidget(m_filePathField);
+    row->addWidget(browseBtn);
+    layout->addLayout(row);
+    connect(browseBtn, SIGNAL(clicked()), this, SLOT(onBrowseFile()));
+  }
+
+  if (!m_useOpenRadio) m_useFileRadio->setChecked(true);
+
+  QHBoxLayout* buttonRow = new QHBoxLayout();
+  buttonRow->addStretch();
+  QPushButton* okButton     = new QPushButton(tr("OK"), this);
+  QPushButton* cancelButton = new QPushButton(tr("Cancel"), this);
+  buttonRow->addWidget(okButton);
+  buttonRow->addWidget(cancelButton);
+  layout->addLayout(buttonRow);
+
+  connect(okButton, SIGNAL(clicked()), this, SLOT(onAccept()));
+  connect(cancelButton, SIGNAL(clicked()), this, SLOT(reject()));
+
+  setLayout(layout);
+}
+
+void CspLinkChooserDialog::onBrowseFile() {
+  // DontConfirmOverwrite: our own confirmation in InstanceManager (which
+  // explains this will be overwritten with the CSP export) replaces the
+  // native one, rather than showing both back to back.
+  // DontConfirmOverwrite:
+  // ネイティブの上書き確認の代わりに、InstanceManager側の（CSP書き出しで
+  // 上書きされる旨を説明する）確認を表示するため、二重に確認しない。
+  QString path = QFileDialog::getSaveFileName(
+      this, tr("Select or Enter XDTS File"), QString(),
+      tr("XDTS files (*.xdts)"), nullptr, QFileDialog::DontConfirmOverwrite);
+  if (path.isEmpty()) return;
+  if (!path.endsWith(".xdts")) path += ".xdts";
+  m_filePathField->setText(path);
+  m_useFileRadio->setChecked(true);
+}
+
+void CspLinkChooserDialog::onAccept() {
+  if (m_useOpenRadio && m_useOpenRadio->isChecked()) {
+    m_resultPath            = m_openFilesCombo->currentData().toString();
+    m_needsOverwriteConfirm = true;
+  } else if (m_useFileRadio->isChecked()) {
+    if (m_filePathField->text().isEmpty()) return;
+    m_resultPath            = m_filePathField->text();
+    m_needsOverwriteConfirm = QFileInfo(m_resultPath).exists();
+  } else {
+    return;
+  }
+  accept();
 }
 
 //-----------------------------------------------------------------------------

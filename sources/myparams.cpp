@@ -842,9 +842,6 @@ void MyParams::setCurrentXdtsPath(const QString& path) {
   MyParams* p = MyParams::instance();
   m_currentXdtsPaths.clear();
   QString fileName = QFileInfo(path).fileName();
-  std::cout << "fileName = " << fileName.toStdString() << std::endl;
-  std::cout << "p->suffix(Genga) = " << p->suffix(Genga).toStdString()
-            << std::endl;
   if (fileName.contains(p->suffix(Genga))) {
     m_currentXdtsPaths.insert(Area_Actions, path);
     fileName = fileName.replace(p->suffix(Genga), p->suffix(Douga),

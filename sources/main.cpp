@@ -27,6 +27,19 @@ int main(int argc, char* argv[]) {
   a.setAttribute(Qt::AA_CompressHighFrequencyEvents);
   a.setAttribute(Qt::AA_CompressTabletEvents);
 
+  MyParams::instance()->initialize();
+
+  QTranslator tra;
+  QString lang = MyParams::instance()->language();
+  if (lang != "en") {
+    QString qmFileName = QString("XDTS_Viewer_%1").arg(lang);
+    if (QDir(PathUtils::getTranslationFolderPath())
+            .exists(qmFileName + ".qm")) {
+      tra.load(qmFileName, PathUtils::getTranslationFolderPath());
+      a.installTranslator(&tra);
+    }
+  }
+
   // Single-instance / multi-window coordination. Use QApplication::arguments()
   // (not raw argv) so non-ASCII paths survive on Windows. A Forwarded process
   // has already handed its request to the running mothership and must exit
@@ -43,18 +56,6 @@ int main(int argc, char* argv[]) {
   if (role == InstanceManager::Role::Forwarded) return 0;
   if (role == InstanceManager::Role::Mothership) return a.exec();
 
-  MyParams::instance()->initialize();
-
-  QTranslator tra;
-  QString lang = MyParams::instance()->language();
-  if (lang != "en") {
-    QString qmFileName = QString("XDTS_Viewer_%1").arg(lang);
-    if (QDir(PathUtils::getTranslationFolderPath())
-            .exists(qmFileName + ".qm")) {
-      tra.load(qmFileName, PathUtils::getTranslationFolderPath());
-      a.installTranslator(&tra);
-    }
-  }
   MyParams::instance()->initStamps();
 
 #ifndef __MACOS__
@@ -73,6 +74,9 @@ int main(int argc, char* argv[]) {
     QObject::connect(InstanceManager::instance(),
                      &InstanceManager::reloadAndActivateRequested, &w,
                      &MyWindow::reloadAndActivate);
+    QObject::connect(InstanceManager::instance(),
+                     &InstanceManager::cspLinkStatusChanged, &w,
+                     &MyWindow::onCspLinkStatusChanged);
   }
 
   QRect geometry = MyParams::instance()->loadWindowGeometry();

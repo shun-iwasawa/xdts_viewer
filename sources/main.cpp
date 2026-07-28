@@ -54,6 +54,22 @@ int main(int argc, char* argv[]) {
   InstanceManager::Role role =
       InstanceManager::instance()->bootstrap(a.arguments(), initialPath);
   if (role == InstanceManager::Role::Forwarded) return 0;
+
+#ifdef __MACOS__
+  // On macOS, Finder/`open` requests for a file other than the one this
+  // process was launched with don't start a new process (Launch Services
+  // treats the bundle as already running); they arrive as a
+  // QFileOpenEvent on whichever process is already running instead. This
+  // has no effect on Windows, where every launch is a fresh process with
+  // its own argv.
+  // macOSでは、起動時に渡されたのとは別のファイルに対するFinder/`open`の
+  // 要求は新規プロセスを起動しない（Launch Servicesがバンドルを既に
+  // 実行中とみなすため）。代わりに、既に実行中のいずれかのプロセスへ
+  // QFileOpenEventとして届く。各起動が固有のargvを持つ新規プロセスと
+  // なるWindowsでは影響しない。
+  qApp->installEventFilter(InstanceManager::instance());
+#endif
+
   if (role == InstanceManager::Role::Mothership) return a.exec();
 
   MyParams::instance()->initStamps();

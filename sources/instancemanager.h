@@ -12,6 +12,7 @@
 class QLocalServer;
 class QLocalSocket;
 class QSharedMemory;
+class QEvent;
 
 // Coordinates single-instance behavior for the app: a single hidden
 // "mothership" process arbitrates which XDTS file is open in which
@@ -64,6 +65,22 @@ public:
   // 解除する。役割がWorker以外の場合は何もしない。非破壊的な操作
   // （以後のCSP同期にのみ影響）なので、呼び出し前の確認は不要。
   void requestUnlink();
+
+  // macOS only: Finder/`open` file-open requests for a file other than the
+  // one this process was launched with arrive as a QFileOpenEvent on the
+  // running QApplication instead of a fresh process with a new argv (macOS's
+  // Launch Services treats the bundle as already running and does not start
+  // a second process). Installed as an application-wide event filter by
+  // main.cpp so it sees these regardless of which existing process (the
+  // mothership or a worker) macOS happens to deliver them to.
+  // macOS専用: 起動時に渡されたのとは別のファイルに対するFinder/`open`の
+  // オープン要求は、新しいargvを持つ新規プロセスとしてではなく、既存の
+  // QApplicationインスタンスへのQFileOpenEventとして届く（macOSの
+  // Launch Servicesはバンドルを既に実行中とみなし、2つ目のプロセスを
+  // 起動しないため）。macOSがどのプロセス（母艦かワーカーか）にこれを
+  // 配送するかに関わらず受け取れるよう、main.cppからアプリケーション
+  // 全体のイベントフィルタとしてインストールされる。
+  bool eventFilter(QObject* watched, QEvent* event) override;
 
 signals:
   // Worker role only: emitted when the mothership asks this window to

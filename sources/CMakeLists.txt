@@ -20,6 +20,7 @@ set(HEADERS
     xdtsio.h
     pathutils.h
     commandmanager.h
+    macdockicon.h
     ${MOC_HEADERS}
 )
 
@@ -54,6 +55,18 @@ elseif(CMAKE_HOST_APPLE)
     message(STATUS "Build environment is APPLE")
 else()
     message(ERROR "Unsupported build environment, only MSVC and APPLE are supported")
+endif()
+
+# macdockicon.mm is Objective-C++ (hides the mothership process's Dock icon
+# on macOS); only compiled for the Apple build, MSVC cannot build .mm files.
+# macdockicon.mmはObjective-C++（macOSで母艦プロセスのDockアイコンを隠す
+# ためのもの）。Appleビルドでのみコンパイルする。MSVCは.mmファイルを
+# ビルドできない。
+if(BUILD_ENV_APPLE)
+    set(SOURCES
+        ${SOURCES}
+        macdockicon.mm
+    )
 endif()
 
 #-----------------------------------------------------------------------------
@@ -166,6 +179,9 @@ if(BUILD_ENV_MSVC)
     target_link_libraries(${PROJECT_NAME} Qt5::Widgets Qt5::Network ${PSD_SDK_LIB} )
 else()
     target_link_libraries(${PROJECT_NAME} Qt5::Widgets Qt5::Network)
+    # AppKit is needed by macdockicon.mm (NSApplicationActivationPolicy).
+    # AppKitはmacdockicon.mm（NSApplicationActivationPolicy）に必要。
+    target_link_libraries(${PROJECT_NAME} "-framework AppKit")
 endif()
 
 add_definitions(

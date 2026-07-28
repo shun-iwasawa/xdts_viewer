@@ -2,6 +2,7 @@
 #include "pathutils.h"
 #include "xdtsio.h"
 #include "dialogs.h"
+#include "macdockicon.h"
 
 #include <QApplication>
 #include <QCoreApplication>
@@ -170,6 +171,17 @@ void InstanceManager::startMothership(const QString& initialPath) {
   // 代わりにonServerSocketDisconnected()（m_workersが空になったら終了）で
   // 明示的に制御する。
   qApp->setQuitOnLastWindowClosed(false);
+
+  // The mothership has no window, but on macOS every process that starts a
+  // Cocoa event loop still gets a Dock icon by default; hide it so the app
+  // doesn't show two Dock icons (one for this process, one for the worker
+  // window it spawns).
+  // 母艦はウィンドウを持たないが、macOSではCocoaのイベントループを開始した
+  // 各プロセスは既定でDockアイコンを持つ。起動するワーカーウィンドウの
+  // アイコンと並んで2つ表示されないよう、ここで隠す。
+#ifdef __MACOS__
+  hideDockIcon();
+#endif
 
   // Treat our own launch argument the same way as a request coming from
   // another process (always spawns a worker, since nothing is registered

@@ -1,5 +1,7 @@
 #include "instancemanager.h"
 #include "pathutils.h"
+#include "xdtsio.h"
+#include "dialogs.h"
 
 #include <QApplication>
 #include <QCoreApplication>
@@ -8,8 +10,20 @@
 #include <QSharedMemory>
 #include <QProcess>
 #include <QMap>
+#include <QSet>
+#include <QFile>
+#include <QFileInfo>
+#include <QDir>
+#include <QMessageBox>
+#include <QPushButton>
+#include <QTimer>
+#include <QThread>
 
 #include <cstring>
+
+#ifdef WIN32
+#include <windows.h>
+#endif
 
 namespace {
 // Fixed identifiers shared by every process of this app so they can find
@@ -66,7 +80,25 @@ InstanceManager::Role InstanceManager::bootstrap(const QStringList& args,
     QLocalSocket socket;
     socket.connectToServer(kServerName);
     if (socket.waitForConnected(1000)) {
-      sendFrame(&socket, Command::Open, requestedPath);
+      bool sent = sendFrame(&socket, Command::Open, requestedPath);
+      // This process exits right after returning (the Forwarded role skips
+      // a.exec() entirely in main.cpp), tearing down the pipe handle almost
+      // immediately after the write above. On Windows this occasionally
+      // races the mothership's asynchronous read of that same data: if the
+      // pipe's "closing" notification is dispatched before the "data
+      // arrived" one, the write can be silently lost even though it
+      // reached the OS-level buffer. A brief pause here gives the
+      // mothership's event loop time to actually read the frame before
+      // this process's handle goes away.
+      // このプロセスはreturn直後に終了する（Forwardedロールはmain.cppで
+      // a.exec()自体を呼ばないため）ため、上のwrite直後にほぼ即座にパイプ
+      // ハンドルが閉じられる。Windowsでは、母艦側の非同期読み取りとこれが
+      // 稀に競合することがある: 「切断」の通知が「データ到着」の通知より
+      // 先に配送されると、OSレベルのバッファには届いていた書き込みが
+      // 静かに失われることがある。ここで一呼吸置くことで、このプロセスの
+      // ハンドルが消える前に母艦のイベントループが確実にフレームを読み
+      // 取れるようにする。
+      if (sent) QThread::msleep(50);
       socket.disconnectFromServer();
       m_role = Role::Forwarded;
       return m_role;
@@ -124,10 +156,41 @@ void InstanceManager::startMothership(const QString& initialPath) {
   connect(m_server, &QLocalServer::newConnection, this,
           &InstanceManager::onNewConnection);
   m_role = Role::Mothership;
+
+  // The mothership has no MyWindow of its own; its only ever-visible
+  // window is a transient CSP sync dialog. Qt's default
+  // quitOnLastWindowClosed=true would otherwise quit the whole process
+  // (killing the QLocalServer and orphaning every worker) the moment that
+  // dialog closes. This process's lifetime is instead driven explicitly by
+  // onServerSocketDisconnected() (quits once m_workers is empty).
+  // 母艦はMyWindowを持たず、唯一表示されうるのはCSP同期用の一時的な
+  // ダイアログのみ。Qtの既定であるquitOnLastWindowClosed=trueのままだと、
+  // そのダイアログが閉じた瞬間にプロセス全体が終了してしまい
+  // （QLocalServerも消え、全ワーカーが孤立する）。このプロセスの寿命は
+  // 代わりにonServerSocketDisconnected()（m_workersが空になったら終了）で
+  // 明示的に制御する。
+  qApp->setQuitOnLastWindowClosed(false);
+
   // Treat our own launch argument the same way as a request coming from
   // another process (always spawns a worker, since nothing is registered
   // yet at this point).
   handleOpenRequest(initialPath);
+
+  // If the initial request ended without spawning any worker (e.g. the user
+  // cancelled the CSP sync dialog above), this invisible process has nothing
+  // to manage and must not linger: setQuitOnLastWindowClosed(false) above
+  // also disabled the implicit quit that used to end it, and a lingering
+  // mothership would keep holding the shared-memory lock and the IPC pipe.
+  // quit() called before exec() is ignored, so post it to run as soon as
+  // exec() starts instead.
+  // 最初の要求がワーカーを1つも起動せずに終わった場合（例:上のCSP同期
+  // ダイアログをユーザーがキャンセルした場合）、この不可視プロセスには
+  // 管理対象がなく、残留させてはならない。上のsetQuitOnLastWindowClosed
+  // (false)により従来の暗黙終了も無効化されており、残留した母艦は共有
+  // メモリロックとIPCパイプを握り続けてしまう。exec()前のquit()は無視
+  // されるため、exec()開始直後に実行されるよう投函しておく。
+  if (!m_spawnedAnyWorker && m_workers.isEmpty())
+    QTimer::singleShot(0, qApp, &QCoreApplication::quit);
 }
 
 void InstanceManager::onNewConnection() {
@@ -165,11 +228,48 @@ void InstanceManager::onServerSocketReadyRead() {
       // Registers one path this worker currently has open. A paired
       // genga/douga sheet sends both paths, so either one resolves to this
       // window.
-      m_workers.insert(PathUtils::canonicalizePath(path), socket);
+      QString registeredPath = PathUtils::canonicalizePath(path);
+      m_workers.insert(registeredPath, socket);
+      // Covers the case where this socket belongs to a worker just spawned
+      // for a CSP link (performCspSync() couldn't notify it directly since
+      // it wasn't registered yet at that point).
+      // performCspSync()がCSP連携のために起動したばかりのワーカーは、その
+      // 時点では未登録のため直接通知できない。そのケースをここでカバー
+      // する。
+      if (!m_linkedDestPath.isEmpty() && registeredPath == m_linkedDestPath) {
+        m_linkedWorkerSocket = socket;
+        sendFrame(socket, Command::LinkStatusChanged, QStringLiteral("1"));
+      }
     } else if (cmd == Command::Open) {
       // A short-lived forwarder is relaying an open request; it will
-      // disconnect on its own right after this.
-      handleOpenRequest(path);
+      // disconnect on its own right after this. Defer the handling to the
+      // event loop instead of calling it here: handleOpenRequest() can show
+      // a modal CSP dialog, and that dialog's nested event loop delivers
+      // this very socket's disconnected() signal while this slot is still
+      // on the stack. onServerSocketDisconnected() then destroys `buffer`
+      // and deletes `socket`, so resuming the loop below after the dialog
+      // would touch freed memory and hang/crash the mothership (which then
+      // silently stops serving IPC while its pipe still accepts connects).
+      // 短命の転送プロセスがオープン要求を中継しており、送信直後に自分から
+      // 切断してくる。ここで直接処理せず、イベントループへ遅延させる:
+      // handleOpenRequest()はモーダルなCSPダイアログを表示することがあり、
+      // そのダイアログのネストしたイベントループが、このスロットの実行中に
+      // まさにこのソケットのdisconnected()を配送してしまう。すると
+      // onServerSocketDisconnected()が`buffer`を破棄し`socket`を削除する
+      // ため、ダイアログ後に下のループを再開すると解放済みメモリに触れ、
+      // 母艦がハング／クラッシュする（パイプは接続を受け付けたまま、
+      // IPCへの応答だけが沈黙する）。
+      const QString requestedPath = path;
+      QTimer::singleShot(0, this, [this, requestedPath]() {
+        handleOpenRequest(requestedPath);
+      });
+    } else if (cmd == Command::Unlink) {
+      // Explicit CSP unlink request from a worker window's menu action.
+      if (m_linkedWorkerSocket == socket) {
+        m_linkedWorkerSocket = nullptr;
+        m_linkedDestPath.clear();
+        sendFrame(socket, Command::LinkStatusChanged, QString());
+      }
     }
   }
 }
@@ -187,6 +287,15 @@ void InstanceManager::onServerSocketDisconnected() {
     it.next();
     if (it.value() == socket) it.remove();
   }
+
+  // This window closing also breaks the CSP link if it was the linked one.
+  // このウィンドウが閉じることで、それがCSP連携の紐づけ先だった場合は
+  // 紐づけも解除される。
+  if (m_linkedWorkerSocket == socket) {
+    m_linkedWorkerSocket = nullptr;
+    m_linkedDestPath.clear();
+  }
+
   socket->deleteLater();
 
   // All windows are closed: the mothership has no reason to keep running.
@@ -194,6 +303,11 @@ void InstanceManager::onServerSocketDisconnected() {
 }
 
 void InstanceManager::handleOpenRequest(const QString& path) {
+  if (isCspExchangePath(path)) {
+    handleCspSyncRequest(path);
+    return;
+  }
+
   QString canonical = PathUtils::canonicalizePath(path);
   if (!canonical.isEmpty() && m_workers.contains(canonical)) {
     // Already open in a worker window: ask it to reload and come forward
@@ -205,6 +319,7 @@ void InstanceManager::handleOpenRequest(const QString& path) {
 }
 
 void InstanceManager::spawnWorker(const QString& path) {
+  m_spawnedAnyWorker = true;
   QStringList args;
   args << kWorkerFlag;
   if (!path.isEmpty()) args << path;
@@ -239,13 +354,21 @@ void InstanceManager::notifyPathChanged(const QStringList& paths) {
   }
 }
 
+void InstanceManager::requestUnlink() {
+  if (m_role != Role::Worker || !m_workerSocket) return;
+  sendFrame(m_workerSocket, Command::Unlink, QString());
+}
+
 void InstanceManager::onWorkerSocketReadyRead() {
   m_workerRecvBuffer.append(m_workerSocket->readAll());
 
   Command cmd;
   QString path;
   while (tryReadFrame(m_workerRecvBuffer, cmd, path)) {
-    if (cmd == Command::Reload) emit reloadAndActivateRequested();
+    if (cmd == Command::Reload)
+      emit reloadAndActivateRequested();
+    else if (cmd == Command::LinkStatusChanged)
+      emit cspLinkStatusChanged(!path.isEmpty());
   }
 }
 
@@ -269,8 +392,19 @@ bool InstanceManager::sendFrame(QLocalSocket* socket, Command cmd,
   frame.append(reinterpret_cast<const char*>(&len), sizeof(len));
   frame.append(payload);
 
-  socket->write(frame);
-  return socket->waitForBytesWritten(1000);
+  if (socket->write(frame) != frame.size()) return false;
+
+  // write() for a small local-socket message often completes synchronously,
+  // leaving nothing buffered to flush. waitForBytesWritten() has nothing to
+  // wait for in that case and can return false immediately -- that must not
+  // be mistaken for a failure, which is why bytesToWrite() is checked first.
+  // write()はローカルソケット向けの小さなメッセージであれば同期的に完了
+  // することが多く、その場合フラッシュすべきデータは残っていない。その
+  // 状態ではwaitForBytesWritten()には待つべきものがなく即座にfalseを
+  // 返しうるが、それを送信失敗と誤認してはいけないため、先に
+  // bytesToWrite()を確認する。
+  if (socket->bytesToWrite() == 0) return true;
+  return socket->waitForBytesWritten(1000) || socket->bytesToWrite() == 0;
 }
 
 bool InstanceManager::tryReadFrame(QByteArray& buffer, Command& cmd,
@@ -289,4 +423,197 @@ bool InstanceManager::tryReadFrame(QByteArray& buffer, Command& cmd,
   cmd  = static_cast<Command>(static_cast<quint8>(payload.at(0)));
   path = QString::fromUtf8(payload.mid(1));
   return true;
+}
+//-----------------------------------------------------------------------------
+// CLIP STUDIO PAINT integration
+//-----------------------------------------------------------------------------
+
+namespace {
+// Forces a just-shown top-level widget (e.g. a QMessageBox/QDialog) to the
+// real foreground. The mothership has no window of its own and isn't the
+// active process, so it hits the same Windows foreground-lock restriction
+// worked around in MyWindow::reloadAndActivate() (mywindow.cpp): a Z-order
+// change via the native HWND's topmost flag isn't subject to that
+// restriction, unlike activateWindow()/SetForegroundWindow().
+// 母艦プロセスにはウィンドウがなく、アクティブプロセスでもないため、
+// mywindow.cppのreloadAndActivate()と同じWindowsフォアグラウンドロックの
+// 制限を受ける。activateWindow()/SetForegroundWindowと異なり、ネイティブ
+// HWNDの最前面フラグによるZ順序の変更はこの制限を受けない。
+void forceToForeground(QWidget* widget) {
+#ifdef WIN32
+  widget->show();
+  HWND hwnd = reinterpret_cast<HWND>(widget->winId());
+  SetWindowPos(hwnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
+  SetWindowPos(hwnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
+#endif
+}
+
+// Reads src's raw bytes and writes them to dst as-is (no XDTS
+// parse/re-serialize), overwriting dst if it already exists.
+// srcの生バイトをそのままdstへ書き込む（XDTSの解析・再シリアライズは
+// 行わない）。dstが既に存在する場合は上書きする。
+bool copyFileOverwrite(const QString& src, const QString& dst) {
+  QFile in(src);
+  if (!in.open(QIODevice::ReadOnly)) return false;
+  QByteArray data = in.readAll();
+  in.close();
+
+  QFile out(dst);
+  if (!out.open(QIODevice::WriteOnly | QIODevice::Truncate)) return false;
+  out.write(data);
+  return true;
+}
+}  // namespace
+
+// CSP always writes its export to this same fixed path (see
+// "Windowsデジタルタイムシート連携方法.pdf"). Computed once via
+// QDir::tempPath(), which matches the GetTempPath() API the document
+// describes.
+// CSPは常にこの固定パスへ書き出す（"Windowsデジタルタイムシート連携方法.pdf"
+// 参照）。ドキュメントに記載のGetTempPath() APIに対応するQDir::tempPath()で
+// 一度だけ計算する。
+bool InstanceManager::isCspExchangePath(const QString& path) const {
+  static const QString kCspExchangePath = PathUtils::canonicalizePath(
+      QDir::tempPath() + "/ExchangeDigitalTimeSheet/animation.xdts");
+  return !path.isEmpty() &&
+         PathUtils::canonicalizePath(path) == kCspExchangePath;
+}
+
+bool InstanceManager::getXdtsMetadata(const QString& path, int& layerCount,
+                                      int& duration) const {
+  XdtsData data;
+  if (!loadXdtsScene(&data, path)) return false;
+  if (data.isEmpty() || data.timeTable().isEmpty()) return false;
+  layerCount = data.timeTable().getCellHeader().getLayerNames().size();
+  duration   = data.timeTable().getDuration();
+  return true;
+}
+
+// One representative path per distinct open window (a paired genga/douga
+// window contributes two entries to m_workers for the same socket).
+// 開いているウィンドウ1つにつき代表パスを1つ返す（原画／動画ペアの
+// ウィンドウは同じソケットに対しm_workersに2エントリを持つため）。
+QStringList InstanceManager::currentlyOpenDestPaths() const {
+  QStringList result;
+  QSet<QLocalSocket*> seen;
+  for (auto it = m_workers.constBegin(); it != m_workers.constEnd(); ++it) {
+    if (seen.contains(it.value())) continue;
+    seen.insert(it.value());
+    result << it.key();
+  }
+  return result;
+}
+
+void InstanceManager::handleCspSyncRequest(const QString& animationXdtsPath) {
+  int newLayerCount, newDuration;
+  if (!getXdtsMetadata(animationXdtsPath, newLayerCount, newDuration)) {
+    QMessageBox box(QMessageBox::Critical, tr("CSP Sync"),
+                    tr("Failed to read the Clip Studio Paint export (%1).")
+                        .arg(animationXdtsPath),
+                    QMessageBox::Ok);
+    forceToForeground(&box);
+    box.exec();
+    return;
+  }
+
+  bool hasActiveLink = (m_linkedWorkerSocket != nullptr);
+
+  if (hasActiveLink) {
+    int oldLayerCount, oldDuration;
+    bool ok = getXdtsMetadata(m_linkedDestPath, oldLayerCount, oldDuration);
+    // レイヤー数が2以上、またはdurationが6フレーム以上異なる場合は
+    // 別のCSPプロジェクトの可能性があるとみなし、確認を挟む。
+    bool differsSignificantly = !ok ||
+                                qAbs(newLayerCount - oldLayerCount) >= 2 ||
+                                qAbs(newDuration - oldDuration) >= 6;
+
+    if (!differsSignificantly) {
+      // Quiet auto-update: content looks like the same clip, no dialog.
+      performCspSync(m_linkedDestPath, animationXdtsPath);
+      return;
+    }
+
+    QMessageBox box(QMessageBox::Question, tr("CSP Sync"),
+                    tr("The Clip Studio Paint export looks very different "
+                       "from the currently linked file (%1). Continue "
+                       "updating it, or choose a different file?")
+                        .arg(QFileInfo(m_linkedDestPath).fileName()));
+    QPushButton* continueBtn =
+        box.addButton(tr("Continue"), QMessageBox::AcceptRole);
+    QPushButton* differentBtn =
+        box.addButton(tr("Choose Different File"), QMessageBox::ActionRole);
+    box.addButton(QMessageBox::Cancel);
+    forceToForeground(&box);
+    box.exec();
+
+    if (box.clickedButton() == continueBtn) {
+      performCspSync(m_linkedDestPath, animationXdtsPath);
+      return;
+    }
+    if (box.clickedButton() != differentBtn) return;  // Cancel: do nothing
+    if (m_linkedWorkerSocket) {
+      sendFrame(m_linkedWorkerSocket, Command::LinkStatusChanged, QString());
+    }
+    m_linkedWorkerSocket = nullptr;
+    m_linkedDestPath.clear();
+    // Fall through to the picker below.
+  }
+
+  CspLinkChooserDialog dlg(currentlyOpenDestPaths());
+  forceToForeground(&dlg);
+  if (dlg.exec() != QDialog::Accepted) return;
+
+  QString destPath = dlg.resultPath();
+  if (destPath.isEmpty()) return;
+
+  if (dlg.needsOverwriteConfirm()) {
+    QMessageBox confirm(
+        QMessageBox::Question, tr("CSP Sync"),
+        tr("This will overwrite %1 with the Clip Studio Paint export. "
+           "Continue?")
+            .arg(QFileInfo(destPath).fileName()),
+        QMessageBox::Yes | QMessageBox::No);
+    forceToForeground(&confirm);
+    if (confirm.exec() != QMessageBox::Yes) return;
+  }
+
+  performCspSync(destPath, animationXdtsPath);
+}
+
+void InstanceManager::performCspSync(QString destPath,
+                                     const QString& animationXdtsPath) {
+  if (!copyFileOverwrite(animationXdtsPath, destPath)) {
+    QMessageBox box(QMessageBox::Critical, tr("CSP Sync"),
+                    tr("Failed to write %1.").arg(destPath), QMessageBox::Ok);
+    forceToForeground(&box);
+    box.exec();
+    return;
+  }
+
+  QLocalSocket* previousLinkedSocket = m_linkedWorkerSocket;
+  m_linkedDestPath                   = PathUtils::canonicalizePath(destPath);
+  QLocalSocket* targetSocket = m_workers.value(m_linkedDestPath, nullptr);
+
+  // Tell the previously linked window (if it's a different one, and still
+  // open) that it's no longer linked.
+  // 以前紐づいていたウィンドウ（destPathと異なり、まだ開いている場合）へ、
+  // 紐づけが解除されたことを通知する。
+  if (previousLinkedSocket && previousLinkedSocket != targetSocket) {
+    sendFrame(previousLinkedSocket, Command::LinkStatusChanged, QString());
+  }
+
+  if (targetSocket) {
+    m_linkedWorkerSocket = targetSocket;
+    sendFrame(targetSocket, Command::Reload, QString());
+    sendFrame(targetSocket, Command::LinkStatusChanged, QStringLiteral("1"));
+  } else {
+    // The new worker isn't registered yet; the Command::Register handler
+    // in onServerSocketReadyRead() will notify it (and set
+    // m_linkedWorkerSocket) once it connects.
+    // 新しいワーカーはまだ未登録のため、onServerSocketReadyRead()内の
+    // Command::Registerハンドラが、接続時に改めて通知する
+    // （m_linkedWorkerSocketもそこで設定される）。
+    m_linkedWorkerSocket = nullptr;
+    spawnWorker(destPath);
+  }
 }

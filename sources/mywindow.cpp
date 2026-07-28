@@ -33,6 +33,7 @@
 #include <QProxyStyle>
 #include <QDesktopServices>
 #include <QDateTime>
+#include <QThread>
 #include <QDragEnterEvent>
 #include <QDropEvent>
 #include <QMimeData>
@@ -67,7 +68,10 @@ public:
 //-----------------------------
 
 MyWindow::MyWindow()
-    : m_data(nullptr), m_settingsDialog(nullptr), m_preferencesDialog(nullptr) {
+    : m_data(nullptr)
+    , m_settingsDialog(nullptr)
+    , m_preferencesDialog(nullptr)
+    , m_isCspLinked(false) {
   setAcceptDrops(true);
 
   m_previewPane     = new XsheetPdfPreviewPane(this);
@@ -341,6 +345,9 @@ MyWindow::MyWindow()
   QMenu* menu       = new QMenu(this);
   QAction* prefAct  = menu->addAction(tr("Preferences"));
   QAction* aboutAct = menu->addAction(tr("About"));
+  m_unlinkCspAct    = menu->addAction(tr("Unlink from CSP"));
+  m_unlinkCspAct->setVisible(
+      false);  // shown only while this window is CSP-linked
   QToolButton* menuBtn =
       qobject_cast<QToolButton*>(toolBar->widgetForAction(menuAct));
   menuBtn->setMenu(menu);
@@ -413,6 +420,7 @@ MyWindow::MyWindow()
   connect(settingsAct, SIGNAL(triggered()), m_settingsDialog, SLOT(show()));
   connect(prefAct, SIGNAL(triggered()), m_preferencesDialog, SLOT(show()));
   connect(aboutAct, SIGNAL(triggered()), this, SLOT(onAbout()));
+  connect(m_unlinkCspAct, SIGNAL(triggered()), this, SLOT(onUnlinkCsp()));
 
   connect(currentColorGroup, SIGNAL(triggered(QAction*)), this,
           SLOT(onCurrentColorActionTriggered(QAction*)));
@@ -978,6 +986,7 @@ void MyWindow::updateTitleBar() {
   else
     str = QFileInfo(MyParams::instance()->currentXdtsPath()).fileName();
   if (MyParams::instance()->somethingIsDirty()) str += " *";
+  if (m_isCspLinked) str += tr(" [Linked with Clip Studio Paint]");
 
   str += " - " + qApp->applicationName();
   setWindowTitle(str);
@@ -1246,7 +1255,22 @@ void MyWindow::reloadXdtsDataOnly() {
 
     QString path = MyParams::instance()->currentXdtsPath(areaId);
 
+    // A CSP sync notification can arrive an instant after the mothership
+    // process finishes writing this same file; on Windows, briefly
+    // reopening a just-written file can transiently fail (e.g. real-time
+    // antivirus scanning triggered by the write) even though the write
+    // itself is already complete. A short retry absorbs that window
+    // instead of surfacing a spurious error to the user.
+    // CSP同期の通知は、母艦プロセスが同じファイルへの書き込みを終えた
+    // 直後に届くことがある。Windowsでは、書き込み自体は完了していても、
+    // 直後の再オープンが一過性に失敗することがある（例:書き込みを契機と
+    // したウイルス対策のリアルタイムスキャン）。この猶予をリトライで
+    // 吸収し、ユーザーに偽陽性のエラーを見せないようにする。
     bool ok = loadXdtsScene(m_data, path);
+    for (int retry = 0; !ok && retry < 5; ++retry) {
+      QThread::msleep(100);
+      ok = loadXdtsScene(m_data, path);
+    }
     if (!ok) {
       QMessageBox::critical(this, tr("Error"),
                             tr("%1 is not a valid XDTS file.").arg(path));
@@ -1308,4 +1332,16 @@ void MyWindow::reloadAndActivate() {
 #endif
   raise();
   activateWindow();
+}
+
+// Non-destructive: only affects future CSP syncs, so no confirmation is
+// asked here (see InstanceManager::requestUnlink()).
+// 非破壊的な操作（以後のCSP同期にのみ影響）のため、ここでは確認を
+// 行わない（InstanceManager::requestUnlink()を参照）。
+void MyWindow::onUnlinkCsp() { InstanceManager::instance()->requestUnlink(); }
+
+void MyWindow::onCspLinkStatusChanged(bool linked) {
+  m_isCspLinked = linked;
+  m_unlinkCspAct->setVisible(linked);
+  updateTitleBar();
 }

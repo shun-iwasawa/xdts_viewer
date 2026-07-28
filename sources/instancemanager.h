@@ -57,6 +57,14 @@ public:
   // から呼び出す。
   void notifyPathChanged(const QStringList& paths);
 
+  // Clears the CSP link if it currently points at this worker window.
+  // No-op unless this process's role is Worker. Non-destructive (only
+  // affects future CSP syncs), so callers need not confirm before calling.
+  // このワーカーウィンドウがCSP連携の紐づけ先である場合、その紐づけを
+  // 解除する。役割がWorker以外の場合は何もしない。非破壊的な操作
+  // （以後のCSP同期にのみ影響）なので、呼び出し前の確認は不要。
+  void requestUnlink();
+
 signals:
   // Worker role only: emitted when the mothership asks this window to
   // reload its XDTS data and come to the foreground, because another
@@ -65,6 +73,14 @@ signals:
   // ファイルを要求したため、母艦からXDTSデータの再読み込みと前面化を
   // 指示された際にシグナルされる。
   void reloadAndActivateRequested();
+
+  // Worker role only: emitted when the mothership reports that this
+  // window's CSP link status changed (established, moved to another
+  // window, or explicitly/implicitly unlinked).
+  // Worker側でのみ発火する。このウィンドウのCSP連携の紐づけ状態が変化
+  // した（成立・他ウィンドウへの移動・解除のいずれか）ことを母艦から
+  // 通知された際にシグナルされる。
+  void cspLinkStatusChanged(bool linked);
 
 private slots:
   void onNewConnection();          // mothership: a new incoming connection
@@ -79,7 +95,9 @@ private:
     Register          = 0,
     Open              = 1,
     Reload            = 2,
-    ClearRegistration = 3
+    ClearRegistration = 3,
+    Unlink            = 4,
+    LinkStatusChanged = 5
   };
 
   bool tryAcquireLock();
@@ -89,6 +107,26 @@ private:
   bool sendFrame(QLocalSocket* socket, Command cmd, const QString& path);
   static bool tryReadFrame(QByteArray& buffer, Command& cmd, QString& path);
   void spawnWorker(const QString& path);
+
+  // CLIP STUDIO PAINT integration: CSP always writes its export to the
+  // same fixed path and launches XDTS Viewer with that path as argv[1].
+  // This is treated as a request to sync a real XDTS file (m_linkedDestPath)
+  // rather than a request to open that fixed path directly.
+  // CLIP STUDIO PAINT連携: CSPは常に同一の固定パスへ書き出し、そのパスを
+  // 引数にXDTS Viewerを起動する。これを固定パス自体を開く要求としてではなく、
+  // 実体のあるXDTSファイル（m_linkedDestPath）を同期する要求として扱う。
+  bool isCspExchangePath(const QString& path) const;
+  void handleCspSyncRequest(const QString& animationXdtsPath);
+  // destPath is taken by value (not const&): callers sometimes pass
+  // m_linkedDestPath itself, and this function reassigns m_linkedDestPath
+  // partway through, so a reference parameter would alias it.
+  // destPathは値渡し（const参照ではない）: 呼び出し元がm_linkedDestPath
+  // 自身を渡すことがあり、本関数の途中でm_linkedDestPathを再代入する
+  // ため、参照渡しだとエイリアシングが発生してしまう。
+  void performCspSync(QString destPath, const QString& animationXdtsPath);
+  bool getXdtsMetadata(const QString& path, int& layerCount,
+                       int& duration) const;
+  QStringList currentlyOpenDestPaths() const;
 
   Role m_role            = Role::Standalone;
   QSharedMemory* m_lock  = nullptr;
@@ -103,6 +141,28 @@ private:
 
   // Worker-side receive buffer for messages pushed by the mothership.
   QByteArray m_workerRecvBuffer;
+
+  // CLIP STUDIO PAINT integration: canonical path of the XDTS file
+  // currently linked to CSP's export, and the worker socket that owns it
+  // (nullptr if unlinked). m_linkedWorkerSocket is the authoritative
+  // "is there an active link" signal (a plain pointer check, kept in sync
+  // eagerly on link/unlink/disconnect) -- m_linkedDestPath is only for
+  // display and metadata comparison.
+  // CLIP STUDIO PAINT連携: CSPの書き出しに現在紐づいているXDTSファイルの
+  // 正規化パスと、それを所有するワーカーのソケット（未紐づけならnullptr）。
+  // 「現在紐づけ中か」の判定はm_linkedWorkerSocketの単純なポインタ判定を
+  // 正とし（紐づけ／解除／切断のたびに即時更新する）、m_linkedDestPathは
+  // 表示とメタデータ比較のためだけに使う。
+  QString m_linkedDestPath;
+  QLocalSocket* m_linkedWorkerSocket = nullptr;
+
+  // Whether this mothership has ever spawned a worker process. Used only
+  // by startMothership() to detect the "initial request ended with nothing
+  // to manage" case (see the comment there).
+  // この母艦がワーカープロセスを一度でも起動したかどうか。startMothership()
+  // で「最初の要求が管理対象なしで終わった」場合の検出のみに使う
+  // （詳細はそちらのコメントを参照）。
+  bool m_spawnedAnyWorker = false;
 };
 
 #endif

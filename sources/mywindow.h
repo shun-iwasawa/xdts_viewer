@@ -43,6 +43,11 @@ class MyWindow : public QMainWindow {
 
   QAction* m_currentColorAction;
 
+  // CLIP STUDIO PAINT integration UI state.
+  // CLIP STUDIO PAINT連携用のUI状態。
+  QAction* m_unlinkCspAct;
+  bool m_isCspLinked;
+
   // Re-reads the XDTS timing data only, leaving hand-drawn overlays / undo
   // history / format settings untouched. Used by reloadAndActivate().
   // 手描きオーバーレイ・Undo履歴・フォーマット設定はそのままに、XDTSの
@@ -64,6 +69,12 @@ public:
   // 際にInstanceManagerから呼ばれる。XDTSデータを再読み込みし（未保存の手描き
   // データは保持したまま）、ウィンドウを前面化する。
   void reloadAndActivate();
+
+  // Updates the title bar / Unlink menu visibility to reflect the current
+  // CSP link status (InstanceManager::cspLinkStatusChanged()).
+  // 現在のCSP連携の紐づけ状態を、タイトルバーとUnlinkメニューの表示に
+  // 反映する（InstanceManager::cspLinkStatusChanged()）。
+  void onCspLinkStatusChanged(bool linked);
 
 protected:
   void closeEvent(QCloseEvent* event) override;
@@ -105,6 +116,12 @@ protected slots:
   void onDelete();
   void onBacksideImgPathChanged();
   void onAbout();
+
+  // Explicitly unlinks this window from a Clip Studio Paint sync, if it
+  // is currently the linked window (see InstanceManager::requestUnlink()).
+  // このウィンドウがClip Studio Paint連携の紐づけ先である場合、明示的に
+  // 紐づけを解除する（InstanceManager::requestUnlink()を参照）。
+  void onUnlinkCsp();
 };
 
 #endif

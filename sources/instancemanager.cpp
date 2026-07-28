@@ -19,6 +19,8 @@
 #include <QPushButton>
 #include <QTimer>
 #include <QThread>
+#include <QEvent>
+#include <QFileOpenEvent>
 
 #include <cstring>
 
@@ -364,6 +366,36 @@ void InstanceManager::notifyPathChanged(const QStringList& paths) {
   for (const QString& path : paths) {
     if (!path.isEmpty()) sendFrame(m_workerSocket, Command::Register, path);
   }
+}
+
+bool InstanceManager::eventFilter(QObject* watched, QEvent* event) {
+  if (event->type() == QEvent::FileOpen) {
+    QString path = static_cast<QFileOpenEvent*>(event)->file();
+    if (!path.isEmpty()) {
+      if (m_role == Role::Mothership) {
+        handleOpenRequest(path);
+      } else if (m_role == Role::Worker) {
+        // Reuse the persistent mothership connection: from the mothership's
+        // side this is indistinguishable from a Windows forwarder's
+        // Command::Open, so it goes through the exact same
+        // already-open-elsewhere-vs-spawn-a-new-worker logic.
+        // 既存の母艦への持続的な接続を再利用する: 母艦側から見れば
+        // これはWindowsの転送プロセスによるCommand::Openと区別が
+        // つかないため、既存の「他で開いているか・新規ワーカーを
+        // 起動するか」の判定ロジックがそのまま適用される。
+        sendFrame(m_workerSocket, Command::Open, path);
+      }
+      // Role::Standalone: no mothership exists to route this to (IPC setup
+      // failed entirely); there is no reasonable fallback, so the request
+      // is silently dropped, same as it would have been before this filter
+      // existed.
+      // Role::Standalone: 転送先の母艦が存在しない（IPCの初期化自体が
+      // 失敗している）ため、妥当な代替手段がなく、このフィルタ導入前と
+      // 同様に要求を静かに無視する。
+    }
+    return true;
+  }
+  return QObject::eventFilter(watched, event);
 }
 
 void InstanceManager::requestUnlink() {
